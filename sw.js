@@ -3,7 +3,7 @@
  * Offline caching support for Solo Raya Smart Itinerary Planner
  */
 
-const CACHE_NAME = 'dolanesia-v25';
+const CACHE_NAME = 'dolanesia-v26';
 const ASSETS_TO_CACHE = [
   './',
   './index.html',
@@ -60,6 +60,16 @@ self.addEventListener('activate', (event) => {
 self.addEventListener('fetch', (event) => {
   // Only cache GET requests
   if (event.request.method !== 'GET') return;
+
+  // Never intercept or cache dynamic API backend requests (ensures real-time sync)
+  try {
+    const reqUrl = new URL(event.request.url);
+    if (reqUrl.pathname.includes('/api/')) {
+      return;
+    }
+  } catch (e) {
+    // If URL parsing fails, continue
+  }
 
   // Network First, falling back to cache strategy
   // Guarantees immediate updates on server, while retaining full offline capability

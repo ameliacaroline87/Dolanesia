@@ -2092,9 +2092,9 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!state.currentUser || state.currentUser.role !== 'admin') return;
 
     // Stat metric counters
-    if (elements.adminCountTrips) elements.adminCountTrips.textContent = `${state.openTrips.length} Trip`;
-    if (elements.adminCountDestinations) elements.adminCountDestinations.textContent = `${state.destinations.length} Spot`;
-    if (elements.adminCountUsers) elements.adminCountUsers.textContent = `${state.registeredUsers.length} User`;
+    if (elements.adminCountTrips) elements.adminCountTrips.textContent = state.openTrips.length;
+    if (elements.adminCountDestinations) elements.adminCountDestinations.textContent = state.destinations.length;
+    if (elements.adminCountUsers) elements.adminCountUsers.textContent = state.registeredUsers.length;
 
     // Sub-tab count badges
     const badgeDest = document.getElementById('badge-tab-dest-count');
@@ -3949,5 +3949,18 @@ document.addEventListener('DOMContentLoaded', () => {
     switchPage(initialHash, false);
   } else {
     switchPage('beranda', false);
+  }
+
+  // Real-time synchronization: Auto-sync on window focus (guarantees real-time sync between web and installed PWA app)
+  window.addEventListener('focus', () => {
+    fetchServerUsers(false);
+    syncLocalTripsToServer();
+  });
+
+  // Force PWA / Service Worker update check on launch
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.ready.then((reg) => {
+      reg.update().catch(() => {});
+    });
   }
 });
