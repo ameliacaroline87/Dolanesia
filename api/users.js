@@ -1,6 +1,6 @@
 // ==============================================================================
 // Vercel Serverless Function: /api/users
-// Mendukung Vercel Storage (KV / Upstash Redis) untuk sinkronisasi multi-device
+// Mendukung Upstash (Redis / Vercel KV) & Supabase untuk sinkronisasi HP-Laptop
 // ==============================================================================
 
 const SEED_USERS = [
@@ -54,44 +54,64 @@ const SEED_USERS = [
   }
 ];
 
-// Helper: Komunikasi dengan Vercel KV via REST
+function getUpstashCredentials() {
+  const url = process.env.UPSTASH_REDIS_REST_URL || process.env.KV_REST_API_URL;
+  const token = process.env.UPSTASH_REDIS_REST_TOKEN || process.env.KV_REST_API_TOKEN;
+  return { url, token };
+}
+
 async function kvGet(key) {
-  const url = process.env.KV_REST_API_URL;
-  const token = process.env.KV_REST_API_TOKEN;
+  const { url, token } = getUpstashCredentials();
   if (!url || !token) return null;
   try {
-    const res = await fetch(`${url}/get/${key}`, {
-      headers: { Authorization: `Bearer ${token}` }
+    // Upstash command standard POST
+    const res = await fetch(url, {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(['GET', key])
     });
-    if (!res.ok) return null;
+    if (!res.ok) {
+      // Fallback path GET
+      const res2 = await fetch(`${url}/get/${key}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if (!res2.ok) return null;
+      const json2 = await res2.json();
+      return json2 && json2.result ? (typeof json2.result === 'string' ? JSON.parse(json2.result) : json2.result) : null;
+    }
     const json = await res.json();
     if (!json || json.result === null || json.result === undefined) return null;
     return typeof json.result === 'string' ? JSON.parse(json.result) : json.result;
   } catch (e) {
-    console.error('KV get error:', e);
+    console.error('Upstash get error:', e);
     return null;
   }
 }
 
 async function kvSet(key, value) {
-  const url = process.env.KV_REST_API_URL;
-  const token = process.env.KV_REST_API_TOKEN;
+  const { url, token } = getUpstashCredentials();
   if (!url || !token) return false;
+  const strVal = typeof value === 'string' ? value : JSON.stringify(value);
   try {
-    const res = await fetch(`${url}/set/${key}`, {
+    const res = await fetch(url, {
       method: 'POST',
-      headers: { Authorization: `Bearer ${token}` },
-      body: JSON.stringify(typeof value === 'string' ? value : JSON.stringify(value))
+      headers: {
+        Authorization: `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(['SET', key, strVal])
     });
     return res.ok;
   } catch (e) {
-    console.error('KV set error:', e);
+    console.error('Upstash set error:', e);
     return false;
   }
 }
 
 export default async function handler(req, res) {
-  // Set CORS headers
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
@@ -101,38 +121,36 @@ export default async function handler(req, res) {
     return res.status(200).end();
   }
 
-  const isKVConfigured = Boolean(process.env.KV_REST_API_URL && process.env.KV_REST_API_TOKEN);
+  const { url, token } = getUpstashCredentials();
+  const isUpstashConnected = Boolean(url && token);
 
-  // Ambil data users saat ini
+  // Ambil users
   let users = null;
-  if (isKVConfigured) {
+  if (isUpstashConnected) {
     users = await kvGet('dolanesia_users');
   }
 
   if (!users || !Array.isArray(users) || users.length === 0) {
     users = SEED_USERS;
-    if (isKVConfigured) {
+    if (isUpstashConnected) {
       await kvSet('dolanesia_users', users);
     }
   }
 
-  // 1. GET: Ambil semua data pengguna
   if (req.method === 'GET') {
     return res.status(200).json({
       success: true,
-      storage: isKVConfigured ? 'vercel-kv' : 'in-memory-seed',
-      isKVConfigured: isKVConfigured,
+      storage: isUpstashConnected ? 'upstash-redis' : 'in-memory-seed',
+      isUpstashConnected: isUpstashConnected,
       users: users,
       total: users.length
     });
   }
 
-  // 2. POST: Tambah / Sinkron / Hapus Pengguna
   if (req.method === 'POST') {
     const body = req.body || {};
     const action = body.action || req.query.action || 'register';
 
-    // A. Tambah / Registrasi Pengguna Baru
     if (action === 'register' || action === 'create_user') {
       const newUser = body.user || body;
       if (!newUser || !newUser.name) {
@@ -167,20 +185,19 @@ export default async function handler(req, res) {
         users.push(userToSave);
       }
 
-      if (isKVConfigured) {
+      if (isUpstashConnected) {
         await kvSet('dolanesia_users', users);
       }
 
       return res.status(200).json({
         success: true,
-        storage: isKVConfigured ? 'vercel-kv' : 'in-memory-seed',
+        storage: isUpstashConnected ? 'upstash-redis' : 'in-memory-seed',
         user: userToSave,
         users: users,
         total: users.length
       });
     }
 
-    // B. Sinkronisasi Batch dari Perangkat Penguji
     if (action === 'sync_batch' || action === 'sync_users') {
       const incomingList = Array.isArray(body.users) ? body.users : [];
       let updated = false;
@@ -213,37 +230,35 @@ export default async function handler(req, res) {
         }
       }
 
-      if (updated && isKVConfigured) {
+      if (updated && isUpstashConnected) {
         await kvSet('dolanesia_users', users);
       }
 
       return res.status(200).json({
         success: true,
-        storage: isKVConfigured ? 'vercel-kv' : 'in-memory-seed',
+        storage: isUpstashConnected ? 'upstash-redis' : 'in-memory-seed',
         users: users,
         total: users.length
       });
     }
 
-    // C. Hapus Pengguna (Admin)
     if (action === 'delete_user' || action === 'delete') {
       const delId = body.userId || body.id || req.query.id;
       if (delId) {
         users = users.filter(u => u.id !== delId || u.id === 'admin-01');
-        if (isKVConfigured) {
+        if (isUpstashConnected) {
           await kvSet('dolanesia_users', users);
         }
       }
       return res.status(200).json({ success: true, users: users, total: users.length });
     }
 
-    // D. Toggle Role
     if (action === 'toggle_role') {
       const toggleId = body.userId || body.id || req.query.id;
       const target = users.find(u => u.id === toggleId);
       if (target) {
         target.role = target.role === 'admin' ? 'customer' : 'admin';
-        if (isKVConfigured) {
+        if (isUpstashConnected) {
           await kvSet('dolanesia_users', users);
         }
       }

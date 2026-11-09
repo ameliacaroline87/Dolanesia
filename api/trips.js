@@ -1,6 +1,6 @@
 // ==============================================================================
 // Vercel Serverless Function: /api/trips
-// Mendukung Vercel Storage (KV / Upstash Redis) untuk sinkronisasi open trip
+// Mendukung Upstash (Redis / Vercel KV) untuk sinkronisasi open trip
 // ==============================================================================
 
 const SEED_TRIPS = [
@@ -31,15 +31,32 @@ const SEED_TRIPS = [
   }
 ];
 
+function getUpstashCredentials() {
+  const url = process.env.UPSTASH_REDIS_REST_URL || process.env.KV_REST_API_URL;
+  const token = process.env.UPSTASH_REDIS_REST_TOKEN || process.env.KV_REST_API_TOKEN;
+  return { url, token };
+}
+
 async function kvGet(key) {
-  const url = process.env.KV_REST_API_URL;
-  const token = process.env.KV_REST_API_TOKEN;
+  const { url, token } = getUpstashCredentials();
   if (!url || !token) return null;
   try {
-    const res = await fetch(`${url}/get/${key}`, {
-      headers: { Authorization: `Bearer ${token}` }
+    const res = await fetch(url, {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(['GET', key])
     });
-    if (!res.ok) return null;
+    if (!res.ok) {
+      const res2 = await fetch(`${url}/get/${key}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if (!res2.ok) return null;
+      const json2 = await res2.json();
+      return json2 && json2.result ? (typeof json2.result === 'string' ? JSON.parse(json2.result) : json2.result) : null;
+    }
     const json = await res.json();
     if (!json || json.result === null || json.result === undefined) return null;
     return typeof json.result === 'string' ? JSON.parse(json.result) : json.result;
@@ -49,14 +66,17 @@ async function kvGet(key) {
 }
 
 async function kvSet(key, value) {
-  const url = process.env.KV_REST_API_URL;
-  const token = process.env.KV_REST_API_TOKEN;
+  const { url, token } = getUpstashCredentials();
   if (!url || !token) return false;
+  const strVal = typeof value === 'string' ? value : JSON.stringify(value);
   try {
-    const res = await fetch(`${url}/set/${key}`, {
+    const res = await fetch(url, {
       method: 'POST',
-      headers: { Authorization: `Bearer ${token}` },
-      body: JSON.stringify(typeof value === 'string' ? value : JSON.stringify(value))
+      headers: {
+        Authorization: `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(['SET', key, strVal])
     });
     return res.ok;
   } catch (e) {
@@ -74,16 +94,17 @@ export default async function handler(req, res) {
     return res.status(200).end();
   }
 
-  const isKVConfigured = Boolean(process.env.KV_REST_API_URL && process.env.KV_REST_API_TOKEN);
+  const { url, token } = getUpstashCredentials();
+  const isUpstashConnected = Boolean(url && token);
 
   let trips = null;
-  if (isKVConfigured) {
+  if (isUpstashConnected) {
     trips = await kvGet('dolanesia_trips');
   }
 
   if (!trips || !Array.isArray(trips) || trips.length === 0) {
     trips = SEED_TRIPS;
-    if (isKVConfigured) {
+    if (isUpstashConnected) {
       await kvSet('dolanesia_trips', trips);
     }
   }
@@ -91,7 +112,7 @@ export default async function handler(req, res) {
   if (req.method === 'GET') {
     return res.status(200).json({
       success: true,
-      storage: isKVConfigured ? 'vercel-kv' : 'in-memory-seed',
+      storage: isUpstashConnected ? 'upstash-redis' : 'in-memory-seed',
       trips: trips,
       total: trips.length
     });
@@ -123,7 +144,7 @@ export default async function handler(req, res) {
       };
 
       trips.push(tripToSave);
-      if (isKVConfigured) {
+      if (isUpstashConnected) {
         await kvSet('dolanesia_trips', trips);
       }
 
@@ -134,7 +155,7 @@ export default async function handler(req, res) {
       const delId = body.tripId || body.id || req.query.id;
       if (delId) {
         trips = trips.filter(t => t.id !== delId);
-        if (isKVConfigured) {
+        if (isUpstashConnected) {
           await kvSet('dolanesia_trips', trips);
         }
       }
