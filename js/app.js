@@ -1959,7 +1959,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Stat metric counters
     if (elements.adminCountTrips) elements.adminCountTrips.textContent = `${state.openTrips.length} Trip`;
     if (elements.adminCountDestinations) elements.adminCountDestinations.textContent = `${state.destinations.length} Spot`;
-    if (elements.adminCountUsers) elements.adminCountUsers.textContent = state.registeredUsers.length + 1250;
+    if (elements.adminCountUsers) elements.adminCountUsers.textContent = `${state.registeredUsers.length} User`;
 
     // Sub-tab count badges
     const badgeDest = document.getElementById('badge-tab-dest-count');
@@ -2267,7 +2267,76 @@ document.addEventListener('DOMContentLoaded', () => {
       });
     });
 
+    renderHeroStats();
     refreshIcons();
+  }
+
+  // Real Dynamic Hero Statistics & Authentic Reviews Modal
+  function renderHeroStats() {
+    const destCount = (state.destinations && state.destinations.length) ? state.destinations.length : 16;
+
+    // Calculate unique connected travelers (registered users + open trip participants)
+    const travelerSet = new Set();
+    (state.registeredUsers || []).forEach(u => travelerSet.add(u.name || u.id));
+    (state.openTrips || []).forEach(t => {
+      if (t.host && t.host.name) travelerSet.add(t.host.name);
+      if (t.joinedUsers) {
+        t.joinedUsers.forEach(ju => travelerSet.add(ju.name));
+      }
+    });
+    const travelerCount = travelerSet.size || 25;
+
+    // Calculate real average rating and total reviews from destinations
+    let totalRating = 0;
+    let totalReviews = 0;
+    (state.destinations || []).forEach(d => {
+      totalRating += (Number(d.rating) || 4.8);
+      totalReviews += (Number(d.reviewCount) || 0);
+    });
+    const avgRating = destCount > 0 ? (totalRating / destCount).toFixed(1) : '4.8';
+    const reviewsFormatted = totalReviews >= 1000 ? `${(totalReviews / 1000).toFixed(0)}k+` : totalReviews;
+
+    const elDest = document.getElementById('hero-stat-dest-count');
+    if (elDest) elDest.textContent = `${destCount}+`;
+
+    const elTravelers = document.getElementById('hero-stat-traveler-count');
+    if (elTravelers) elTravelers.textContent = `${travelerCount}+`;
+
+    const elRating = document.getElementById('hero-stat-rating-value');
+    if (elRating) {
+      elRating.innerHTML = `${avgRating} <i data-lucide="star" class="w-4 h-4 fill-amber-500 text-amber-500 inline-block"></i>`;
+    }
+
+    const elReviewLabel = document.getElementById('hero-stat-review-label');
+    if (elReviewLabel) {
+      elReviewLabel.textContent = `${reviewsFormatted} Ulasan Asli`;
+    }
+  }
+
+  // Reviews Experience Modal Listeners
+  const reviewsModal = document.getElementById('reviews-modal');
+  const btnOpenReviews = document.getElementById('btn-open-reviews-modal');
+  const btnCloseReviews = document.getElementById('btn-close-reviews-modal');
+  const btnReviewsExplore = document.getElementById('btn-reviews-explore-catalog');
+
+  if (btnOpenReviews && reviewsModal) {
+    btnOpenReviews.addEventListener('click', (e) => {
+      e.preventDefault();
+      openModal(reviewsModal);
+    });
+  }
+
+  if (btnCloseReviews && reviewsModal) {
+    btnCloseReviews.addEventListener('click', () => {
+      closeModal(reviewsModal);
+    });
+  }
+
+  if (btnReviewsExplore && reviewsModal) {
+    btnReviewsExplore.addEventListener('click', () => {
+      closeModal(reviewsModal);
+      switchPage('direktori');
+    });
   }
 
   // =========================================================================

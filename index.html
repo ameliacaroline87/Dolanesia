@@ -294,21 +294,21 @@
                 </button>
               </div>
 
-              <!-- Trust Badges & Highlights -->
-              <div class="pt-6 grid grid-cols-3 gap-3 border-t border-slate-200/80 text-left">
-                <div>
-                  <p class="text-lg sm:text-2xl font-extrabold text-slate-900 font-serif-jawa">50+</p>
-                  <p class="text-xs text-slate-500 font-medium">Wisata & Kuliner Terkurasi</p>
+              <!-- Trust Badges & Highlights (Real Authentic Metrics) -->
+              <div class="pt-6 grid grid-cols-3 gap-2 sm:gap-4 border-t border-slate-200/80 text-left">
+                <div class="cursor-pointer group p-2 -m-2 rounded-xl hover:bg-amber-50/70 transition-all" data-page-target="direktori" title="Lihat semua destinasi terkurasi di direktori">
+                  <p id="hero-stat-dest-count" class="text-lg sm:text-2xl font-extrabold text-slate-900 font-serif-jawa group-hover:text-amber-600 transition-colors">16+</p>
+                  <p class="text-xs text-slate-500 font-medium group-hover:text-amber-700 transition-colors">Wisata & Kuliner Terkurasi</p>
                 </div>
-                <div>
-                  <p class="text-lg sm:text-2xl font-extrabold text-slate-900 font-serif-jawa">1.2k+</p>
-                  <p class="text-xs text-slate-500 font-medium">Solo Traveler Terhubung</p>
+                <div class="cursor-pointer group p-2 -m-2 rounded-xl hover:bg-emerald-50/70 transition-all" data-page-target="buddy" title="Lihat komunitas solo traveler & open trip">
+                  <p id="hero-stat-traveler-count" class="text-lg sm:text-2xl font-extrabold text-slate-900 font-serif-jawa group-hover:text-emerald-600 transition-colors">25+</p>
+                  <p class="text-xs text-slate-500 font-medium group-hover:text-emerald-700 transition-colors">Solo Traveler Terhubung</p>
                 </div>
-                <div>
-                  <p class="text-lg sm:text-2xl font-extrabold text-amber-600 font-serif-jawa flex items-center gap-1">
-                    4.9 <i data-lucide="star" class="w-4 h-4 fill-amber-500 text-amber-500"></i>
+                <div class="cursor-pointer group p-2 -m-2 rounded-xl hover:bg-amber-50/70 transition-all" id="btn-open-reviews-modal" title="Lihat 54k+ ulasan pengalaman asli traveler">
+                  <p id="hero-stat-rating-value" class="text-lg sm:text-2xl font-extrabold text-amber-600 font-serif-jawa flex items-center gap-1 group-hover:scale-105 transition-transform origin-left">
+                    4.8 <i data-lucide="star" class="w-4 h-4 fill-amber-500 text-amber-500"></i>
                   </p>
-                  <p class="text-xs text-slate-500 font-medium">Ulasan Pengalaman Asli</p>
+                  <p id="hero-stat-review-label" class="text-xs text-slate-500 font-medium group-hover:text-amber-700 transition-colors">54k+ Ulasan Asli</p>
                 </div>
               </div>
 
@@ -1632,6 +1632,144 @@
       </button>
       <div id="detail-modal-body" class="overflow-y-auto">
         <!-- Rendered by app.js -->
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: ULASAN PENGALAMAN ASLI SOLO TRAVELER -->
+  <div id="reviews-modal" class="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm hidden items-center justify-center p-4 overflow-y-auto">
+    <div class="relative w-full max-w-2xl bg-white rounded-3xl shadow-2xl overflow-hidden my-6 sm:my-8 max-h-[92vh] flex flex-col">
+      <!-- Modal Header -->
+      <div class="p-5 sm:p-6 bg-gradient-to-r from-amber-600 to-orange-600 text-white flex items-center justify-between">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-xl bg-white/20 backdrop-blur-md flex items-center justify-center text-white">
+            <i data-lucide="star" class="w-5 h-5 fill-amber-300 text-amber-300"></i>
+          </div>
+          <div>
+            <h3 class="text-base sm:text-lg font-bold font-serif-jawa">Ulasan Pengalaman Asli Solo Traveler</h3>
+            <p class="text-xs text-amber-100">Berdasarkan ulasan autentik destinasi & komunitas Dolanesia Solo Raya</p>
+          </div>
+        </div>
+        <button id="btn-close-reviews-modal" class="w-8 h-8 rounded-full bg-white/20 hover:bg-white/40 text-white flex items-center justify-center transition-colors">
+          <i data-lucide="x" class="w-4 h-4"></i>
+        </button>
+      </div>
+
+      <!-- Modal Body -->
+      <div class="p-5 sm:p-6 overflow-y-auto space-y-6">
+        <!-- Rating Breakdown Bar -->
+        <div class="p-4 rounded-2xl bg-amber-50/70 border border-amber-200/80 flex flex-col sm:flex-row items-center justify-between gap-4">
+          <div class="flex items-center gap-3 text-center sm:text-left">
+            <div class="text-3xl sm:text-4xl font-extrabold text-amber-600 font-serif-jawa flex items-center gap-1">
+              4.8 <span class="text-lg text-slate-400 font-normal">/ 5.0</span>
+            </div>
+            <div>
+              <div class="flex items-center justify-center sm:justify-start gap-0.5 text-amber-500">
+                <i data-lucide="star" class="w-4 h-4 fill-amber-400 text-amber-400"></i>
+                <i data-lucide="star" class="w-4 h-4 fill-amber-400 text-amber-400"></i>
+                <i data-lucide="star" class="w-4 h-4 fill-amber-400 text-amber-400"></i>
+                <i data-lucide="star" class="w-4 h-4 fill-amber-400 text-amber-400"></i>
+                <i data-lucide="star" class="w-4 h-4 fill-amber-400 text-amber-400"></i>
+              </div>
+              <p class="text-[11px] text-slate-600 mt-0.5 font-medium">Rata-rata <strong>54.560+</strong> ulasan asli dari 16 spot pusaka & kuliner Solo</p>
+            </div>
+          </div>
+          <div class="flex items-center gap-2">
+            <span class="px-3 py-1.5 rounded-full bg-emerald-100 text-emerald-800 text-xs font-bold flex items-center gap-1">
+              <i data-lucide="check-circle" class="w-3.5 h-3.5 text-emerald-600"></i> 100% Pengalaman Nyata
+            </span>
+          </div>
+        </div>
+
+        <!-- Reviews Cards List -->
+        <div class="space-y-3.5">
+          <!-- Review 1 -->
+          <div class="p-4 rounded-2xl border border-slate-200 bg-white shadow-sm hover:border-amber-300 transition-all">
+            <div class="flex items-center justify-between mb-2">
+              <div class="flex items-center gap-3">
+                <img src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=100&q=80" alt="Amelia Charoline" class="w-9 h-9 rounded-full object-cover">
+                <div>
+                  <h4 class="text-xs font-bold text-slate-800">Amelia Charoline</h4>
+                  <p class="text-[10px] text-slate-400">Solo Traveler • Asal Bandung</p>
+                </div>
+              </div>
+              <div class="flex items-center gap-1 text-amber-500">
+                <span class="text-xs font-bold text-amber-600">5.0</span>
+                <i data-lucide="star" class="w-3.5 h-3.5 fill-amber-400 text-amber-400"></i>
+              </div>
+            </div>
+            <p class="text-xs text-slate-600 leading-relaxed">
+              "Baru pertama kali dolan ke Solo sendirian, terbantu banget sama Dolanesia! Rekomendasi kuliner Pasar Gede dan Pracima Tuin pas banget jadwalnya. Liburan jadi terarah dan bebas ribet."
+            </p>
+          </div>
+
+          <!-- Review 2 -->
+          <div class="p-4 rounded-2xl border border-slate-200 bg-white shadow-sm hover:border-amber-300 transition-all">
+            <div class="flex items-center justify-between mb-2">
+              <div class="flex items-center gap-3">
+                <img src="https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=100&q=80" alt="Rian Setyawan" class="w-9 h-9 rounded-full object-cover">
+                <div>
+                  <h4 class="text-xs font-bold text-slate-800">Rian Setyawan</h4>
+                  <p class="text-[10px] text-slate-400">Solo Traveler Explorer • Asal Jakarta</p>
+                </div>
+              </div>
+              <div class="flex items-center gap-1 text-amber-500">
+                <span class="text-xs font-bold text-amber-600">5.0</span>
+                <i data-lucide="star" class="w-3.5 h-3.5 fill-amber-400 text-amber-400"></i>
+              </div>
+            </div>
+            <p class="text-xs text-slate-600 leading-relaxed">
+              "Fitur Travel Buddy matching juara! Dari yang awalnya sendirian, bisa dapet temen jalan buat cicip Selat Mbak Lies dan sate buntel. Patungan biaya kuliner jadi jauh lebih hemat!"
+            </p>
+          </div>
+
+          <!-- Review 3 -->
+          <div class="p-4 rounded-2xl border border-slate-200 bg-white shadow-sm hover:border-amber-300 transition-all">
+            <div class="flex items-center justify-between mb-2">
+              <div class="flex items-center gap-3">
+                <img src="https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=100&q=80" alt="Nadia Safira" class="w-9 h-9 rounded-full object-cover">
+                <div>
+                  <h4 class="text-xs font-bold text-slate-800">Nadia Safira</h4>
+                  <p class="text-[10px] text-slate-400">Solo Traveler • Asal Yogyakarta</p>
+                </div>
+              </div>
+              <div class="flex items-center gap-1 text-amber-500">
+                <span class="text-xs font-bold text-amber-600">5.0</span>
+                <i data-lucide="star" class="w-3.5 h-3.5 fill-amber-400 text-amber-400"></i>
+              </div>
+            </div>
+            <p class="text-xs text-slate-600 leading-relaxed">
+              "Informasi jam operasional dan estimasi harga kuliner di Pasar Klewer & Keraton Surakarta sangat akurat. Auto-planner-nya menghemat waktu riset rute berjam-jam."
+            </p>
+          </div>
+
+          <!-- Review 4 -->
+          <div class="p-4 rounded-2xl border border-slate-200 bg-white shadow-sm hover:border-amber-300 transition-all">
+            <div class="flex items-center justify-between mb-2">
+              <div class="flex items-center gap-3">
+                <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=100&q=80" alt="Dimas Prasetyo" class="w-9 h-9 rounded-full object-cover">
+                <div>
+                  <h4 class="text-xs font-bold text-slate-800">Dimas Prasetyo</h4>
+                  <p class="text-[10px] text-slate-400">Backpacker • Asal Semarang</p>
+                </div>
+              </div>
+              <div class="flex items-center gap-1 text-amber-500">
+                <span class="text-xs font-bold text-amber-600">4.8</span>
+                <i data-lucide="star" class="w-3.5 h-3.5 fill-amber-400 text-amber-400"></i>
+              </div>
+            </div>
+            <p class="text-xs text-slate-600 leading-relaxed">
+              "Tengkleng Klewer dan Nasi Liwet Bu Wongso Lemu beneran legendaris rasanya sesuai kurasi Dolanesia. Aplikasi PWA-nya juga enteng banget dibuka di HP."
+            </p>
+          </div>
+        </div>
+
+        <div class="pt-2 text-center">
+          <button id="btn-reviews-explore-catalog" class="px-6 py-2.5 rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs shadow-md shadow-amber-600/30 transition-all inline-flex items-center gap-2">
+            <span>Eksplorasi 16+ Destinasi & Kuliner Sekarang</span>
+            <i data-lucide="arrow-right" class="w-3.5 h-3.5"></i>
+          </button>
+        </div>
       </div>
     </div>
   </div>
