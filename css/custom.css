@@ -48,14 +48,26 @@ body {
   flex-wrap: nowrap !important;
 }
 
-/* Sembunyikan tombol menu hamburger (garis 3) karena semua navigasi mobile sudah ada di bilah bawah (bottom-nav) */
-#btn-mobile-menu {
-  display: none !important;
-}
-
+/* Aturan Visibilitas Navigasi Responsif */
+/* A. Desktop (>= 1024px): Sembunyikan bottom-nav & garis 3 */
 @media (min-width: 1024px) {
   #bottom-nav {
     display: none !important;
+  }
+  #btn-mobile-menu {
+    display: none !important;
+  }
+}
+
+/* B. Mobile (< 1024px) SAAT BELUM DI-DOWNLOAD (Browser Mode):
+   - Tampilkan tombol garis 3 (hamburger) di header
+   - Sembunyikan bottom-nav */
+@media (max-width: 1023px) {
+  #bottom-nav {
+    display: none !important;
+  }
+  #btn-mobile-menu {
+    display: flex !important;
   }
 }
 
@@ -196,10 +208,14 @@ body {
 }
 
 /* KETIKA DI-DOWNLOAD / STANDALONE APP MODE DI MOBILE (< 1024px):
-   Navbarnya ditaruh di BAGIAN BAWAH! */
+   Navbarnya ditaruh di BAGIAN BAWAH!
+   Kalau sudah ada navbar di bawah, tombol garis 3 ga usah! */
 @media (display-mode: standalone) and (max-width: 1023px) {
   #bottom-nav {
     display: flex !important;
+  }
+  #btn-mobile-menu {
+    display: none !important;
   }
   body {
     padding-bottom: 5.5rem !important;
@@ -215,6 +231,10 @@ body {
   body.is-standalone-app #bottom-nav,
   body.preview-app-mode #bottom-nav {
     display: flex !important;
+  }
+  body.is-standalone-app #btn-mobile-menu,
+  body.preview-app-mode #btn-mobile-menu {
+    display: none !important;
   }
   body.is-standalone-app,
   body.preview-app-mode {

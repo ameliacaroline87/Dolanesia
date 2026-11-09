@@ -388,6 +388,11 @@ document.addEventListener('DOMContentLoaded', () => {
         bottomNav.classList.add('hidden');
         bottomNav.classList.remove('flex');
       }
+      const mobileMenuBtn = elements.mobileMenuBtn || document.getElementById('btn-mobile-menu');
+      if (mobileMenuBtn) {
+        mobileMenuBtn.classList.add('hidden');
+        mobileMenuBtn.classList.remove('flex');
+      }
     } else {
       // 2. In Tourist Views (Beranda, Planner, Direktori, Buddy, Tentang, Profil)
       // Show tourist nav links ONLY on desktop (hidden on mobile, lg:flex on desktop)
@@ -402,15 +407,31 @@ document.addEventListener('DOMContentLoaded', () => {
       }
 
       // NAVIGASI MOBILE:
-      // Saat di-download (Mode Aplikasi Standalone di HP): Navbarnya ditaruh di BAGIAN BAWAH!
-      // Saat belum di-download (Mode Web Browser): Navbar bawah disembunyikan
-      if (bottomNav) {
-        if (isApp) {
+      // 1. Saat di-download (Mode Aplikasi Standalone di HP):
+      //    - Navbarnya ditaruh di BAGIAN BAWAH (#bottom-nav)
+      //    - Tombol garis 3 (#btn-mobile-menu) GA USAH / DISEMBUNYIKAN!
+      // 2. Saat belum di-download (Mode Web Browser biasa):
+      //    - Navbar bawah disembunyikan
+      //    - Tombol garis 3 (#btn-mobile-menu) DITAMPILKAN di mobile untuk buka menu drawer
+      const mobileMenuBtn = elements.mobileMenuBtn || document.getElementById('btn-mobile-menu');
+
+      if (isApp) {
+        if (bottomNav) {
           bottomNav.classList.remove('hidden');
           bottomNav.classList.add('flex');
-        } else {
+        }
+        if (mobileMenuBtn) {
+          mobileMenuBtn.classList.add('hidden');
+          mobileMenuBtn.classList.remove('flex');
+        }
+      } else {
+        if (bottomNav) {
           bottomNav.classList.add('hidden');
           bottomNav.classList.remove('flex');
+        }
+        if (mobileMenuBtn) {
+          mobileMenuBtn.classList.remove('hidden');
+          mobileMenuBtn.classList.add('flex');
         }
       }
 
