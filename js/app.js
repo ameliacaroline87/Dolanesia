@@ -251,11 +251,143 @@ document.addEventListener('DOMContentLoaded', () => {
     adminCategoryDistribution: document.getElementById('admin-category-distribution'),
     adminRegionDistribution: document.getElementById('admin-region-distribution'),
     adminActivityLogs: document.getElementById('admin-activity-logs'),
+    adminAddUserModal: document.getElementById('admin-add-user-modal'),
+    formAdminAddUser: document.getElementById('form-admin-add-user'),
+    btnAdminSyncUsers: document.getElementById('btn-admin-sync-users'),
+    btnAdminOpenAddUser: document.getElementById('btn-admin-open-add-user'),
+    btnCloseAdminUserModal: document.getElementById('btn-close-admin-user-modal'),
+    btnCancelAdminUser: document.getElementById('btn-cancel-admin-user'),
 
     // Settings
     settingWaReminders: document.getElementById('setting-wa-reminders'),
     settingBuddyNotifications: document.getElementById('setting-buddy-notifications')
   };
+
+  // =========================================================================
+  // 2B. BACKEND SYNC SERVICE (Multi-Device & InfinityFree PHP Backend Support)
+  // =========================================================================
+  async function fetchServerUsers(showToastNotice = false) {
+    try {
+      const res = await fetch('api/users.php?t=' + Date.now(), { cache: 'no-store' });
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      const data = await res.json();
+      if (data && data.success && Array.isArray(data.users)) {
+        state.registeredUsers = data.users;
+        localStorage.setItem('dolanesia_registered_users', JSON.stringify(data.users));
+        
+        renderHeroStats();
+        if (state.activePage === 'admin') {
+          renderAdminDashboard();
+        }
+        if (showToastNotice) {
+          showToast(`Data server berhasil disinkronkan! Total ${data.users.length} pengguna terdaftar.`, 'success');
+        }
+        return data.users;
+      }
+    } catch (err) {
+      console.warn('Sync server users info:', err.message);
+      if (showToastNotice) {
+        showToast('Menggunakan cache data lokal (server offline atau belum terhubung).', 'info');
+      }
+    }
+    return state.registeredUsers;
+  }
+
+  async function registerUserOnServer(newUser) {
+    const existingIdx = state.registeredUsers.findIndex(u => u.id === newUser.id || (u.email && u.email.toLowerCase() === newUser.email.toLowerCase()));
+    if (existingIdx !== -1) {
+      state.registeredUsers[existingIdx] = newUser;
+    } else {
+      state.registeredUsers.push(newUser);
+    }
+    localStorage.setItem('dolanesia_registered_users', JSON.stringify(state.registeredUsers));
+
+    try {
+      const res = await fetch('api/users.php', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'register', user: newUser })
+      });
+      if (res.ok) {
+        const data = await res.json();
+        if (data && data.success && Array.isArray(data.users)) {
+          state.registeredUsers = data.users;
+          localStorage.setItem('dolanesia_registered_users', JSON.stringify(data.users));
+        }
+      }
+    } catch (err) {
+      console.warn('Post user to server error:', err.message);
+    }
+  }
+
+  async function syncLocalUsersToServer() {
+    try {
+      const localUsers = JSON.parse(localStorage.getItem('dolanesia_registered_users')) || [];
+      const nonDemo = localUsers.filter(u => u.id !== 'admin-budi' && u.id !== 'user-rian' && u.id !== 'user-nadia');
+      if (nonDemo.length > 0) {
+        await fetch('api/users.php', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ action: 'sync_batch', users: nonDemo })
+        });
+      }
+      await fetchServerUsers(false);
+    } catch (e) {
+      console.warn('Sync local users warning:', e.message);
+    }
+  }
+
+  async function deleteUserOnServer(userId) {
+    try {
+      await fetch('api/users.php', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'delete', userId: userId })
+      });
+    } catch (err) {
+      console.warn('Delete user on server error:', err.message);
+    }
+  }
+
+  async function toggleUserRoleOnServer(userId) {
+    try {
+      await fetch('api/users.php', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'toggle_role', userId: userId })
+      });
+    } catch (err) {
+      console.warn('Toggle role on server error:', err.message);
+    }
+  }
+
+  async function syncLocalTripsToServer() {
+    try {
+      const res = await fetch('api/trips.php?t=' + Date.now());
+      if (res.ok) {
+        const data = await res.json();
+        if (data && data.success && Array.isArray(data.trips) && data.trips.length > 0) {
+          state.openTrips = data.trips;
+          localStorage.setItem('dolanesia_open_trips', JSON.stringify(data.trips));
+          renderOpenTrips();
+        }
+      }
+    } catch (e) {
+      console.warn('Sync trips notice:', e.message);
+    }
+  }
+
+  async function createTripOnServer(trip) {
+    try {
+      await fetch('api/trips.php', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'create', trip: trip })
+      });
+    } catch (e) {
+      console.warn('Create trip server error:', e.message);
+    }
+  }
 
   // =========================================================================
   // 3. UI HELPERS: TOAST NOTIFICATIONS & MODALS
@@ -571,6 +703,7 @@ document.addEventListener('DOMContentLoaded', () => {
       renderProfileView();
     } else if (pageId === 'admin') {
       renderAdminDashboard();
+      fetchServerUsers(false);
     }
 
     refreshIcons();
@@ -899,6 +1032,7 @@ document.addEventListener('DOMContentLoaded', () => {
         };
         state.registeredUsers.push(matchedUser);
         localStorage.setItem('dolanesia_registered_users', JSON.stringify(state.registeredUsers));
+        registerUserOnServer(matchedUser);
       }
 
       state.currentUser = matchedUser;
@@ -949,6 +1083,7 @@ document.addEventListener('DOMContentLoaded', () => {
       elements.formRegisterCustomer.reset();
       showToast(`Pendaftaran berhasil! Selamat datang di Dolanesia, ${newUser.name}! 🎉`);
       switchPage('profil');
+      registerUserOnServer(newUser);
     });
   }
 
@@ -2172,6 +2307,7 @@ document.addEventListener('DOMContentLoaded', () => {
           }
 
           localStorage.setItem('dolanesia_registered_users', JSON.stringify(state.registeredUsers));
+          toggleUserRoleOnServer(targetUser.id);
           if (state.currentUser && state.currentUser.id === targetUser.id) {
             state.currentUser = targetUser;
             localStorage.setItem('dolanesia_user', JSON.stringify(targetUser));
@@ -2195,10 +2331,77 @@ document.addEventListener('DOMContentLoaded', () => {
           if (confirm(`Apakah Anda yakin ingin menghapus akun pengguna "${targetUser.name}"?`)) {
             state.registeredUsers = state.registeredUsers.filter(u => u.id !== userId);
             localStorage.setItem('dolanesia_registered_users', JSON.stringify(state.registeredUsers));
+            deleteUserOnServer(userId);
             renderAdminDashboard();
             showToast(`Pengguna "${targetUser.name}" berhasil dihapus.`);
           }
         });
+      });
+    }
+
+    // Admin User Management Action Listeners (Server Sync & Add User)
+    if (elements.btnAdminSyncUsers) {
+      elements.btnAdminSyncUsers.addEventListener('click', async () => {
+        elements.btnAdminSyncUsers.classList.add('opacity-75');
+        showToast('Menghubungkan ke server pusat...', 'info');
+        await fetchServerUsers(true);
+        elements.btnAdminSyncUsers.classList.remove('opacity-75');
+      });
+    }
+
+    if (elements.btnAdminOpenAddUser && elements.adminAddUserModal) {
+      elements.btnAdminOpenAddUser.addEventListener('click', () => {
+        openModal(elements.adminAddUserModal);
+      });
+    }
+
+    if (elements.btnCloseAdminUserModal && elements.adminAddUserModal) {
+      elements.btnCloseAdminUserModal.addEventListener('click', () => {
+        closeModal(elements.adminAddUserModal);
+      });
+    }
+
+    if (elements.btnCancelAdminUser && elements.adminAddUserModal) {
+      elements.btnCancelAdminUser.addEventListener('click', () => {
+        closeModal(elements.adminAddUserModal);
+      });
+    }
+
+    if (elements.formAdminAddUser) {
+      elements.formAdminAddUser.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const name = document.getElementById('admin-new-user-name').value.trim();
+        const phone = document.getElementById('admin-new-user-phone').value.trim();
+        const city = document.getElementById('admin-new-user-city').value.trim() || 'Solo Raya';
+        const email = document.getElementById('admin-new-user-email').value.trim();
+        const role = document.getElementById('admin-new-user-role').value;
+
+        if (!name || !phone || !email) {
+          showToast('Mohon lengkapi semua data wisatawan!', 'warning');
+          return;
+        }
+
+        const newUser = {
+          id: 'user-' + Date.now(),
+          name,
+          phone,
+          city,
+          email,
+          role,
+          roleLabel: role === 'admin' ? 'Administrator Dolanesia' : 'Solo Traveler Explorer',
+          joinedAt: 'November 2026',
+          avatar: role === 'admin'
+            ? 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=crop&w=150&q=80'
+            : 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=150&q=80',
+          bio: `Wisatawan terdaftar asal ${city}. Siap menjelajahi ragam budaya dan kuliner Solo Raya!`,
+          preference: 'Kuliner & Wisata Budaya'
+        };
+
+        await registerUserOnServer(newUser);
+        renderAdminDashboard();
+        if (elements.adminAddUserModal) closeModal(elements.adminAddUserModal);
+        elements.formAdminAddUser.reset();
+        showToast(`Wisatawan "${newUser.name}" berhasil didaftarkan dan disimpan ke server pusat! 🎉`);
       });
     }
 
@@ -2958,6 +3161,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
       state.openTrips.unshift(newTrip);
       localStorage.setItem('dolanesia_open_trips', JSON.stringify(state.openTrips));
+      createTripOnServer(newTrip);
       renderOpenTrips();
       renderAdminDashboard();
       closeModal(elements.createTripModal);
@@ -3727,6 +3931,8 @@ document.addEventListener('DOMContentLoaded', () => {
   renderDirectory();
   renderOpenTrips();
   renderHomeSpotlight();
+  syncLocalUsersToServer();
+  syncLocalTripsToServer();
 
   // Pre-generate Day 1 plan for immediate interactive satisfaction
   state.currentGeneratedPlan = planner.generateItinerary({

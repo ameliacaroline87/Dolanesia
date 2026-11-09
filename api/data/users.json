@@ -1,0 +1,54 @@
+[
+  {
+    "id": "admin-budi",
+    "name": "Budi Santoso",
+    "phone": "0811-9876-5432",
+    "email": "admin@dolanesia.id",
+    "city": "Surakarta (Solo)",
+    "bio": "Staff Kurasi Pariwisata & Komunitas Dolanesia Solo Raya.",
+    "role": "admin",
+    "roleLabel": "Super Administrator",
+    "joinedAt": "Januari 2026",
+    "avatar": "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=crop&w=150&q=80",
+    "preference": "Manajemen Destinasi"
+  },
+  {
+    "id": "user-rian",
+    "name": "Rian Setyawan",
+    "phone": "0812-3456-7890",
+    "email": "rian.traveler@gmail.com",
+    "city": "Jakarta Selatan",
+    "bio": "Pecinta kuliner legendaris dan penikmat suasana tenang kota Solo. Senang berteman dengan sesama solo traveler!",
+    "role": "customer",
+    "roleLabel": "Solo Traveler Explorer",
+    "joinedAt": "Maret 2026",
+    "avatar": "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=150&q=80",
+    "preference": "Kuliner Otentik & Cagar Budaya"
+  },
+  {
+    "id": "user-nadia",
+    "name": "Nadia Safira",
+    "phone": "0857-1122-3344",
+    "email": "nadia.safira@gmail.com",
+    "city": "Yogyakarta",
+    "bio": "Travel photographer dan penikmat jajanan pasar.",
+    "role": "customer",
+    "roleLabel": "Solo Traveler",
+    "joinedAt": "Februari 2026",
+    "avatar": "https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=150&q=80",
+    "preference": "Sejarah & Belanja"
+  },
+  {
+    "id": "user-amelia",
+    "name": "Amelia Charoline",
+    "phone": "0812-9876-1111",
+    "email": "ameliacs5758@gmail.com",
+    "city": "Bandung",
+    "bio": "Solo traveler asal Bandung. Siap menjelajahi ragam budaya dan kuliner Solo Raya!",
+    "role": "customer",
+    "roleLabel": "Solo Traveler Explorer",
+    "joinedAt": "November 2026",
+    "avatar": "https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=200&q=80",
+    "preference": "Kuliner & Wisata Budaya"
+  }
+]
