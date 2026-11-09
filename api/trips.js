@@ -140,6 +140,7 @@ export default async function handler(req, res) {
         category: newTrip.category || 'budaya',
         host: newTrip.host || { name: 'Host Dolanesia' },
         joinedUsers: newTrip.joinedUsers || [],
+        waGroupLink: newTrip.waGroupLink || '',
         created_at: new Date().toISOString()
       };
 
@@ -149,6 +150,21 @@ export default async function handler(req, res) {
       }
 
       return res.status(200).json({ success: true, trip: tripToSave, trips: trips, total: trips.length });
+    }
+
+    if (action === 'update_wa_link' || action === 'update_trip') {
+      const tripId = body.tripId || body.id || req.query.id;
+      const target = trips.find(t => t.id === tripId);
+      if (target) {
+        if (body.waGroupLink !== undefined) target.waGroupLink = body.waGroupLink;
+        if (body.quotaJoined !== undefined) target.quotaJoined = body.quotaJoined;
+        if (body.joinedUsers) target.joinedUsers = body.joinedUsers;
+        if (isUpstashConnected) {
+          await kvSet('dolanesia_trips', trips);
+        }
+        return res.status(200).json({ success: true, trip: target, trips: trips, total: trips.length });
+      }
+      return res.status(404).json({ success: false, message: 'Trip tidak ditemukan.' });
     }
 
     if (action === 'delete_trip' || action === 'delete') {

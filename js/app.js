@@ -123,7 +123,8 @@ document.addEventListener('DOMContentLoaded', () => {
     isCartPlan: false,
     activeDayTab: 1,
     activeProfileTab: 'edit-info',
-    notificationPrefs: savedNotificationPrefs
+    notificationPrefs: savedNotificationPrefs,
+    communityWaGroupLink: localStorage.getItem('dolanesia_community_wa_link') || 'https://chat.whatsapp.com/sample-dolanesia-community'
   };
 
   const planner = new DolanesiaPlanner(state.destinations);
@@ -2353,6 +2354,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (tripsTableBody) {
       tripsTableBody.innerHTML = state.openTrips.map(trip => {
         const isFull = trip.quotaJoined >= trip.quotaMax;
+        const hasWa = Boolean(trip.waGroupLink && trip.waGroupLink.startsWith('http'));
         return `
           <tr class="hover:bg-slate-50 transition-colors">
             <td class="py-3 px-4 font-semibold text-slate-800">
@@ -2373,7 +2375,23 @@ document.addEventListener('DOMContentLoaded', () => {
               </span>
             </td>
             <td class="py-3 px-3 text-amber-800 font-bold text-xs">${trip.costSplit}</td>
+            <td class="py-3 px-3">
+              ${hasWa ? `
+                <a href="${trip.waGroupLink}" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 hover:bg-emerald-100 border border-emerald-200 transition-colors" title="${trip.waGroupLink}">
+                  <i data-lucide="message-circle" class="w-3 h-3 text-emerald-600"></i>
+                  <span class="max-w-[85px] truncate">Grup Aktif</span>
+                  <i data-lucide="external-link" class="w-2.5 h-2.5 text-emerald-500"></i>
+                </a>
+              ` : `
+                <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-slate-100 text-slate-500" title="Menggunakan link grup WhatsApp komunitas utama">
+                  <i data-lucide="info" class="w-2.5 h-2.5 text-slate-400"></i> Default Komunitas
+                </span>
+              `}
+            </td>
             <td class="py-3 px-4 text-right space-x-1.5 whitespace-nowrap">
+              <button data-admin-edit-wa-trip="${trip.id}" class="px-2.5 py-1.5 rounded-xl text-[10px] font-bold bg-emerald-50 text-emerald-700 hover:bg-emerald-100 transition-colors cursor-pointer shadow-xs inline-flex items-center gap-1" title="Atur Link WhatsApp Grup">
+                <i data-lucide="link" class="w-3 h-3"></i> Link WA
+              </button>
               <button data-admin-toggle-trip="${trip.id}" class="px-2.5 py-1.5 rounded-xl text-[10px] font-bold ${isFull ? 'bg-blue-50 text-blue-700 hover:bg-blue-100' : 'bg-amber-50 text-amber-700 hover:bg-amber-100'} transition-colors cursor-pointer shadow-xs">
                 ${isFull ? 'Buka Slot' : 'Tutup Kuota'}
               </button>
@@ -2384,6 +2402,23 @@ document.addEventListener('DOMContentLoaded', () => {
           </tr>
         `;
       }).join('');
+
+      tripsTableBody.querySelectorAll('[data-admin-edit-wa-trip]').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const tripId = btn.getAttribute('data-admin-edit-wa-trip');
+          const targetTrip = state.openTrips.find(t => t.id === tripId);
+          if (targetTrip) {
+            const editIdEl = document.getElementById('edit-trip-wa-id');
+            const editTitleEl = document.getElementById('edit-trip-wa-title');
+            const editInputEl = document.getElementById('edit-trip-wa-input');
+            const editModalEl = document.getElementById('admin-edit-trip-wa-modal');
+            if (editIdEl) editIdEl.value = targetTrip.id;
+            if (editTitleEl) editTitleEl.textContent = targetTrip.title;
+            if (editInputEl) editInputEl.value = targetTrip.waGroupLink || state.communityWaGroupLink || '';
+            if (editModalEl) openModal(editModalEl);
+          }
+        });
+      });
 
       tripsTableBody.querySelectorAll('[data-admin-toggle-trip]').forEach(btn => {
         btn.addEventListener('click', () => {
@@ -2416,6 +2451,20 @@ document.addEventListener('DOMContentLoaded', () => {
           }
         });
       });
+    }
+
+    // Sinkronisasi Input Link WhatsApp Komunitas di Tab Admin & Banner Travel Buddy
+    const adminCommunityWaInput = document.getElementById('admin-community-wa-link');
+    const btnPreviewCommunityWa = document.getElementById('btn-preview-community-wa-link');
+    if (adminCommunityWaInput && document.activeElement !== adminCommunityWaInput) {
+      adminCommunityWaInput.value = state.communityWaGroupLink || '';
+    }
+    if (btnPreviewCommunityWa) {
+      btnPreviewCommunityWa.href = state.communityWaGroupLink || '#';
+    }
+    const mainWaGroupBtn = document.getElementById('btn-main-travel-buddy-wa-group');
+    if (mainWaGroupBtn && state.communityWaGroupLink) {
+      mainWaGroupBtn.href = state.communityWaGroupLink;
     }
 
     // Render Sub-tab 4: Users Management Table
@@ -2575,6 +2624,83 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     refreshIcons();
+  }
+
+  // =========================================================================
+  // 7B. ADMIN WHATSAPP GROUP LINK HANDLERS (Komunitas Utama & Open Trips)
+  // =========================================================================
+  const btnSaveCommunityWaLink = document.getElementById('btn-save-community-wa-link');
+  if (btnSaveCommunityWaLink) {
+    btnSaveCommunityWaLink.addEventListener('click', () => {
+      const input = document.getElementById('admin-community-wa-link');
+      const val = input ? input.value.trim() : '';
+      if (!val) {
+        showToast('Mohon masukkan tautan link WhatsApp grup komunitas.', 'warning');
+        return;
+      }
+      state.communityWaGroupLink = val;
+      localStorage.setItem('dolanesia_community_wa_link', val);
+
+      const mainWaBtn = document.getElementById('btn-main-travel-buddy-wa-group');
+      if (mainWaBtn) mainWaBtn.href = val;
+
+      const previewBtn = document.getElementById('btn-preview-community-wa-link');
+      if (previewBtn) previewBtn.href = val;
+
+      showToast('Link grup WhatsApp utama komunitas berhasil disimpan! 💬');
+    });
+  }
+
+  const adminEditTripWaModal = document.getElementById('admin-edit-trip-wa-modal');
+  const btnCloseEditTripWaModal = document.getElementById('btn-close-edit-trip-wa-modal');
+  const btnCancelEditTripWa = document.getElementById('btn-cancel-edit-trip-wa');
+  const formEditTripWa = document.getElementById('form-edit-trip-wa');
+
+  if (btnCloseEditTripWaModal && adminEditTripWaModal) {
+    btnCloseEditTripWaModal.addEventListener('click', () => closeModal(adminEditTripWaModal));
+  }
+  if (btnCancelEditTripWa && adminEditTripWaModal) {
+    btnCancelEditTripWa.addEventListener('click', () => closeModal(adminEditTripWaModal));
+  }
+  if (adminEditTripWaModal) {
+    adminEditTripWaModal.addEventListener('click', (e) => {
+      if (e.target === adminEditTripWaModal) closeModal(adminEditTripWaModal);
+    });
+  }
+
+  if (formEditTripWa) {
+    formEditTripWa.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const tripId = document.getElementById('edit-trip-wa-id')?.value;
+      const newWaLink = document.getElementById('edit-trip-wa-input')?.value.trim();
+
+      if (!tripId || !newWaLink) {
+        showToast('Link grup WhatsApp wajib diisi.', 'warning');
+        return;
+      }
+
+      const targetTrip = state.openTrips.find(t => t.id === tripId);
+      if (targetTrip) {
+        targetTrip.waGroupLink = newWaLink;
+        localStorage.setItem('dolanesia_open_trips', JSON.stringify(state.openTrips));
+
+        // Sinkronisasi ke backend serverless /api/trips
+        fetch('/api/trips', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            action: 'update_wa_link',
+            tripId: targetTrip.id,
+            waGroupLink: newWaLink
+          })
+        }).catch(() => {});
+
+        if (adminEditTripWaModal) closeModal(adminEditTripWaModal);
+        renderAdminDashboard();
+        renderOpenTrips();
+        showToast(`Link grup WhatsApp untuk "${targetTrip.title}" berhasil diperbarui! 📱`);
+      }
+    });
   }
 
   // =========================================================================
@@ -3142,10 +3268,22 @@ document.addEventListener('DOMContentLoaded', () => {
                 <p class="text-[10px] text-slate-500">${trip.host.badge} (${trip.host.tripsLed || 1} trip)</p>
               </div>
             </div>
+
+            <!-- Link WhatsApp Trip Banner -->
+            <div class="mt-3 p-2.5 rounded-xl bg-emerald-50/70 border border-emerald-100/80 flex items-center justify-between text-xs">
+              <div class="flex items-center gap-1.5 text-emerald-800">
+                <img src="assets/img/logo-wa.png" class="w-3.5 h-3.5 object-contain" alt="WhatsApp">
+                <span class="text-[11px] font-bold">Grup WA Terhubung</span>
+              </div>
+              <a href="${trip.waGroupLink || state.communityWaGroupLink || 'https://chat.whatsapp.com/sample-dolanesia-community'}" target="_blank" rel="noopener noreferrer" class="text-[11px] font-bold text-emerald-700 hover:text-emerald-900 flex items-center gap-1 hover:underline cursor-pointer">
+                <span>Buka Link WA</span>
+                <i data-lucide="arrow-up-right" class="w-3 h-3"></i>
+              </a>
+            </div>
           </div>
 
           <!-- Action Button -->
-          <button data-trip-id="${trip.id}" class="btn-join-open-trip mt-5 w-full py-2.5 px-4 rounded-xl font-bold text-xs flex items-center justify-center gap-2 transition-all ${isFull ? 'bg-slate-200 text-slate-400 cursor-not-allowed' : 'bg-emerald-600 hover:bg-emerald-700 text-white shadow-md shadow-emerald-600/20 active:scale-98'}" ${isFull ? 'disabled' : ''}>
+          <button data-trip-id="${trip.id}" class="btn-join-open-trip mt-4 w-full py-2.5 px-4 rounded-xl font-bold text-xs flex items-center justify-center gap-2 transition-all ${isFull ? 'bg-slate-200 text-slate-400 cursor-not-allowed' : 'bg-emerald-600 hover:bg-emerald-700 text-white shadow-md shadow-emerald-600/20 active:scale-98'}" ${isFull ? 'disabled' : ''}>
             <i data-lucide="users" class="w-4 h-4"></i>
             <span>${isFull ? 'Slot Penuh' : 'Gabung Grup Travel Buddy'}</span>
           </button>
@@ -3173,6 +3311,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const defaultName = state.currentUser ? state.currentUser.name : '';
     const defaultPhone = state.currentUser ? state.currentUser.phone : '';
     const defaultCity = state.currentUser ? state.currentUser.city : '';
+    const targetWaLink = trip.waGroupLink || state.communityWaGroupLink || 'https://chat.whatsapp.com/sample-dolanesia-community';
 
     contentBox.innerHTML = `
       <div class="p-6 space-y-4">
@@ -3193,8 +3332,16 @@ document.addEventListener('DOMContentLoaded', () => {
           <p><strong>Termasuk:</strong> ${(trip.included || []).join(', ')}</p>
         </div>
 
+        <div class="bg-emerald-50/90 p-3.5 rounded-2xl border border-emerald-200 text-xs text-slate-700 flex items-start gap-2.5">
+          <img src="assets/img/logo-wa.png" class="w-5 h-5 object-contain flex-shrink-0 mt-0.5" alt="WhatsApp">
+          <div>
+            <p class="font-bold text-emerald-900">Grup WhatsApp Khusus Trip Ini</p>
+            <p class="text-[11px] text-emerald-700 mt-0.5">Setelah klik gabung, kamu akan langsung diarahkan masuk ke link grup WhatsApp bersama peserta lainnya!</p>
+          </div>
+        </div>
+
         <!-- Form pendaftaran -->
-        <form id="form-confirm-join" class="space-y-3 pt-2">
+        <form id="form-confirm-join" class="space-y-3 pt-1">
           <div>
             <label class="block text-xs font-bold text-slate-700 mb-1">Nama Panggilan Kamu</label>
             <input type="text" id="join-name" required value="${defaultName}" placeholder="Contoh: Farhan / Nadia" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs focus:ring-2 focus:ring-amber-500 focus:outline-none">
@@ -3211,8 +3358,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
           <div class="pt-2">
             <button type="submit" class="w-full py-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold text-xs shadow-md shadow-emerald-600/30 flex items-center justify-center gap-2 transition-all">
-              <i data-lucide="message-circle" class="w-4 h-4"></i>
-              <span>Gabung Sekarang & Masuk WhatsApp Komunitas</span>
+              <img src="assets/img/logo-wa.png" class="w-4 h-4 object-contain" alt="WhatsApp">
+              <span>Gabung Sekarang & Masuk Grup WhatsApp</span>
             </button>
           </div>
         </form>
@@ -3236,8 +3383,26 @@ document.addEventListener('DOMContentLoaded', () => {
           avatar: state.currentUser ? state.currentUser.avatar : 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=100&q=80'
         });
         localStorage.setItem('dolanesia_open_trips', JSON.stringify(state.openTrips));
+
+        // Sinkronisasi ke backend
+        fetch('/api/trips', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            action: 'update_trip',
+            tripId: trip.id,
+            quotaJoined: trip.quotaJoined,
+            joinedUsers: trip.joinedUsers
+          })
+        }).catch(() => {});
+
         renderOpenTrips();
         renderAdminDashboard();
+
+        // Otomatis buka link grup WhatsApp di tab baru
+        try {
+          window.open(targetWaLink, '_blank');
+        } catch (err) {}
 
         // Show Success screen in modal with direct WhatsApp link
         contentBox.innerHTML = `
@@ -3252,19 +3417,19 @@ document.addEventListener('DOMContentLoaded', () => {
 
             <div class="bg-emerald-50 p-4 rounded-2xl border border-emerald-200 text-left text-xs space-y-2">
               <p class="font-bold text-emerald-900 flex items-center gap-1.5">
-                <i data-lucide="bell" class="w-4 h-4 text-emerald-600"></i> Panduan Langkah Selanjutnya:
+                <i data-lucide="bell" class="w-4 h-4 text-emerald-600"></i> Panduan Bergabung Grup WhatsApp:
               </p>
               <ul class="list-disc list-inside space-y-1 text-emerald-800">
-                <li>Klik tombol hijau di bawah untuk terhubung langsung ke grup WhatsApp Travel Buddy Dolanesia.</li>
-                <li>Host <strong>${trip.host.name}</strong> akan menyapa dan membagikan detail pin lokasi kumpul.</li>
+                <li>Jika tab WhatsApp tidak terbuka otomatis, klik tombol hijau di bawah untuk langsung join ke grup WA.</li>
+                <li>Host <strong>${trip.host.name}</strong> akan menyapa dan membagikan detail pin lokasi kumpul di grup.</li>
                 <li>Bawa kamera atau smartphone terbaikmu untuk mengabadikan momen seru!</li>
               </ul>
             </div>
 
             <div class="pt-2 flex flex-col sm:flex-row gap-2.5">
-              <a href="https://wa.me/?text=Halo%20Host%20Dolanesia!%20Saya%20${encodeURIComponent(userName)}%20sudah%20bergabung%20di%20open%20trip%20'${encodeURIComponent(trip.title)}'." target="_blank" rel="noopener noreferrer" class="flex-1 py-3 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs flex items-center justify-center gap-2 shadow-lg shadow-emerald-600/30">
-                <i data-lucide="message-circle" class="w-4 h-4"></i>
-                Buka WhatsApp & Sapa Host
+              <a href="${targetWaLink}" target="_blank" rel="noopener noreferrer" class="flex-1 py-3 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs flex items-center justify-center gap-2 shadow-lg shadow-emerald-600/30">
+                <img src="assets/img/logo-wa.png" class="w-4 h-4 object-contain" alt="WhatsApp">
+                <span>Buka & Gabung Grup WhatsApp</span>
               </a>
               <button id="btn-done-join" class="py-3 px-4 rounded-xl border border-slate-200 text-slate-700 font-bold text-xs hover:bg-slate-50 transition-colors">
                 Tutup
@@ -3302,6 +3467,8 @@ document.addEventListener('DOMContentLoaded', () => {
       const cost = document.getElementById('new-trip-cost').value.trim() || 'Gratis / Patungan Makan';
       const hostName = document.getElementById('new-trip-host-name').value.trim() || (state.currentUser ? state.currentUser.name : 'Solo Traveler');
       const desc = document.getElementById('new-trip-desc').value.trim() || 'Mari jelajah Solo Raya santai bersama!';
+      const waGroupLinkInput = document.getElementById('new-trip-wa-link');
+      const tripWaLink = (waGroupLinkInput && waGroupLinkInput.value.trim()) || state.communityWaGroupLink;
 
       const newTrip = {
         id: 'trip-user-' + Date.now(),
@@ -3325,7 +3492,7 @@ document.addEventListener('DOMContentLoaded', () => {
         joinedUsers: [
           { name: hostName, city: 'Solo Raya', avatar: state.currentUser ? state.currentUser.avatar : 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=100&q=80' }
         ],
-        waGroupLink: 'https://chat.whatsapp.com/sample'
+        waGroupLink: tripWaLink
       };
 
       state.openTrips.unshift(newTrip);
