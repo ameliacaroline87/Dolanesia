@@ -848,21 +848,33 @@
         <!-- Header Banner Profil -->
         <div class="bg-gradient-to-r from-amber-600 to-orange-600 rounded-3xl p-6 sm:p-8 text-white shadow-xl relative overflow-hidden mb-8">
           <div class="relative z-10 flex flex-col sm:flex-row items-center sm:items-start gap-5 text-center sm:text-left">
-            <!-- Avatar -->
-            <div class="relative">
-              <img id="user-profile-avatar" src="https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=200&q=80" alt="Avatar User" class="w-24 h-24 rounded-full ring-4 ring-white/30 object-cover shadow-lg">
-              <span id="user-role-badge" class="absolute bottom-0 right-0 px-2 py-0.5 rounded-full text-[10px] font-bold bg-white text-amber-700 shadow-sm">
-                Solo Traveler
-              </span>
+            <!-- Avatar with Change Photo Trigger -->
+            <div class="relative group">
+              <div class="relative w-24 h-24 rounded-full ring-4 ring-white/40 shadow-lg overflow-hidden cursor-pointer" id="btn-trigger-banner-avatar" title="Klik untuk mengubah foto profil">
+                <img id="user-profile-avatar" src="https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=200&q=80" alt="Avatar User" class="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110">
+                <div class="absolute inset-0 bg-black/45 backdrop-blur-[2px] flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity text-white text-center p-1">
+                  <i data-lucide="camera" class="w-5 h-5 mb-0.5"></i>
+                  <span class="text-[9px] font-bold leading-tight">Ubah Foto</span>
+                </div>
+              </div>
+              <!-- Floating Camera Badge Button -->
+              <button type="button" id="btn-banner-camera-badge" class="absolute -bottom-1 -right-1 p-2 rounded-full bg-white text-amber-700 hover:bg-amber-50 shadow-md ring-2 ring-amber-600/20 transition-all hover:scale-110 active:scale-95 cursor-pointer" title="Ganti Foto Profil">
+                <i data-lucide="camera" class="w-4 h-4 text-amber-700"></i>
+              </button>
             </div>
 
             <!-- Basic Details -->
-            <div class="space-y-1">
-              <h2 id="user-profile-name" class="text-2xl font-bold font-serif-jawa">Rian Setyawan</h2>
+            <div class="space-y-1.5">
+              <div class="flex flex-wrap items-center justify-center sm:justify-start gap-2.5">
+                <h2 id="user-profile-name" class="text-2xl font-bold font-serif-jawa">Rian Setyawan</h2>
+                <span id="user-role-badge" class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-white/20 text-white border border-white/30 backdrop-blur-sm shadow-sm">
+                  Solo Traveler
+                </span>
+              </div>
               <p id="user-profile-city" class="text-xs text-amber-100 flex items-center justify-center sm:justify-start gap-1">
                 <i data-lucide="map-pin" class="w-3.5 h-3.5 text-amber-200"></i> Asal: Jakarta Selatan
               </p>
-              <div class="flex flex-wrap items-center justify-center sm:justify-start gap-3 text-xs text-white/90 pt-1">
+              <div class="flex flex-wrap items-center justify-center sm:justify-start gap-3 text-xs text-white/90 pt-0.5">
                 <span class="flex items-center gap-1">
                   <i data-lucide="phone" class="w-3.5 h-3.5 text-amber-300"></i>
                   <span id="user-profile-phone">0812-3456-7890</span>
@@ -905,7 +917,48 @@
 
           <!-- Tab Content 1: Edit Informasi Akun -->
           <div id="tab-content-edit-info" class="p-6 sm:p-8 space-y-6">
-            <form id="form-update-profile" class="space-y-4 max-w-2xl">
+            <form id="form-update-profile" class="space-y-5 max-w-2xl">
+              
+              <!-- Bagian Ganti Foto Profil -->
+              <div class="p-4 sm:p-5 rounded-2xl bg-amber-50/70 border border-amber-200/80">
+                <label class="block text-xs font-bold text-slate-800 mb-2.5">Foto Profil Anda</label>
+                <div class="flex flex-col sm:flex-row items-center sm:items-start gap-4">
+                  <!-- Avatar Preview -->
+                  <div class="relative flex-shrink-0 group cursor-pointer" id="btn-trigger-form-avatar" title="Pilih foto dari perangkat">
+                    <img id="form-avatar-preview" src="https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=200&q=80" alt="Preview Foto" class="w-20 h-20 rounded-full object-cover ring-4 ring-white shadow-md border border-amber-200 transition-transform group-hover:scale-105">
+                    <div class="absolute inset-0 rounded-full bg-black/40 flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity text-white text-[10px] font-bold">
+                      <i data-lucide="camera" class="w-4 h-4 mb-0.5"></i>
+                      <span>Ganti</span>
+                    </div>
+                  </div>
+
+                  <!-- Upload Controls & Info -->
+                  <div class="flex-grow space-y-2 text-center sm:text-left">
+                    <div class="flex flex-wrap items-center justify-center sm:justify-start gap-2">
+                      <label for="input-avatar-file" class="px-3.5 py-2 rounded-xl bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold shadow-sm shadow-amber-600/20 cursor-pointer flex items-center gap-1.5 transition-all active:scale-95">
+                        <i data-lucide="upload" class="w-3.5 h-3.5"></i>
+                        <span>Unggah Foto Baru</span>
+                      </label>
+                      <input type="file" id="input-avatar-file" accept="image/*" class="hidden">
+
+                      <button type="button" id="btn-reset-avatar-default" class="px-3.5 py-2 rounded-xl bg-white hover:bg-slate-100 text-slate-700 border border-slate-200 text-xs font-bold transition-all flex items-center gap-1.5">
+                        <i data-lucide="rotate-ccw" class="w-3.5 h-3.5 text-slate-400"></i>
+                        <span>Reset Default</span>
+                      </button>
+                    </div>
+                    <p class="text-[11px] text-slate-500">Mendukung file gambar JPG, PNG, atau WebP dari perangkat Anda.</p>
+                  </div>
+                </div>
+
+                <!-- Presets Avatar Pilihan -->
+                <div class="mt-4 pt-3 border-t border-amber-200/60">
+                  <p class="text-[11px] font-bold text-slate-700 mb-2">Atau pilih avatar karakter siap pakai:</p>
+                  <div class="flex flex-wrap items-center justify-center sm:justify-start gap-2.5" id="avatar-presets-grid">
+                    <!-- Presets will be rendered dynamically by app.js -->
+                  </div>
+                </div>
+              </div>
+
               <div>
                 <label class="block text-xs font-bold text-slate-700 mb-1">Nama Lengkap</label>
                 <input type="text" id="edit-user-name" required value="Rian Setyawan" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-xs focus:ring-2 focus:ring-amber-500 focus:outline-none">

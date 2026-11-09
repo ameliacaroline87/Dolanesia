@@ -990,6 +990,116 @@ document.addEventListener('DOMContentLoaded', () => {
   // =========================================================================
   // 6. PROFILE & SETTINGS VIEW CONTROLLER (#view-profil)
   // =========================================================================
+  const AVATAR_PRESETS = [
+    { id: 'av1', label: 'Traveler 1 (Amelia/Casual)', url: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=200&q=80' },
+    { id: 'av2', label: 'Traveler 2 (Rian/Explorer)', url: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=200&q=80' },
+    { id: 'av3', label: 'Traveler 3 (Wanita Santai)', url: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=200&q=80' },
+    { id: 'av4', label: 'Traveler 4 (Petualang Topi)', url: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=200&q=80' },
+    { id: 'av5', label: 'Traveler 5 (Traveler Senyum)', url: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=200&q=80' },
+    { id: 'av6', label: 'Traveler 6 (Backpacker Santai)', url: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=200&q=80' }
+  ];
+  const DEFAULT_AVATAR = 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=200&q=80';
+
+  function resizeImageToDataUrl(file, maxWidth = 320, maxHeight = 320, quality = 0.85) {
+    return new Promise((resolve, reject) => {
+      if (!file || !file.type.startsWith('image/')) {
+        reject(new Error('File yang dipilih bukan berkas gambar.'));
+        return;
+      }
+      const reader = new FileReader();
+      reader.onerror = () => reject(new Error('Gagal membaca file gambar.'));
+      reader.onload = (e) => {
+        const img = new Image();
+        img.onerror = () => reject(new Error('Gagal memproses gambar.'));
+        img.onload = () => {
+          let width = img.width;
+          let height = img.height;
+          if (width > height) {
+            if (width > maxWidth) {
+              height = Math.round((height * maxWidth) / width);
+              width = maxWidth;
+            }
+          } else {
+            if (height > maxHeight) {
+              width = Math.round((width * maxHeight) / height);
+              height = maxHeight;
+            }
+          }
+          const canvas = document.createElement('canvas');
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(img, 0, 0, width, height);
+          resolve(canvas.toDataURL('image/jpeg', quality));
+        };
+        img.src = e.target.result;
+      };
+      reader.readAsDataURL(file);
+    });
+  }
+
+  function updateUserAvatar(newAvatarUrl, showMessage = true) {
+    if (!state.currentUser) return;
+    state.currentUser.avatar = newAvatarUrl;
+    localStorage.setItem('dolanesia_user', JSON.stringify(state.currentUser));
+
+    const idx = state.registeredUsers.findIndex(u => u.id === state.currentUser.id);
+    if (idx !== -1) {
+      state.registeredUsers[idx].avatar = newAvatarUrl;
+      localStorage.setItem('dolanesia_registered_users', JSON.stringify(state.registeredUsers));
+    }
+
+    const bannerAvatar = document.getElementById('user-profile-avatar');
+    if (bannerAvatar) bannerAvatar.src = newAvatarUrl;
+    const formAvatar = document.getElementById('form-avatar-preview');
+    if (formAvatar) formAvatar.src = newAvatarUrl;
+
+    updatePresetHighlights(newAvatarUrl);
+    renderAuthUI();
+
+    if (showMessage) {
+      showToast('Foto profil berhasil diperbarui! ✨', 'success');
+    }
+  }
+
+  function updatePresetHighlights(currentUrl) {
+    const presetBtns = document.querySelectorAll('.avatar-preset-btn');
+    presetBtns.forEach(btn => {
+      const url = btn.getAttribute('data-avatar-url');
+      if (url === currentUrl) {
+        btn.classList.add('ring-amber-600', 'ring-offset-2', 'scale-110');
+        btn.classList.remove('ring-transparent');
+      } else {
+        btn.classList.remove('ring-amber-600', 'ring-offset-2', 'scale-110');
+        btn.classList.add('ring-transparent');
+      }
+    });
+  }
+
+  function renderAvatarPresets(activeUrl) {
+    const presetsGrid = document.getElementById('avatar-presets-grid');
+    if (!presetsGrid) return;
+
+    if (presetsGrid.children.length === 0) {
+      presetsGrid.innerHTML = AVATAR_PRESETS.map(p => `
+        <button type="button" class="avatar-preset-btn relative rounded-full ring-2 ring-transparent p-0.5 transition-all focus:outline-none hover:scale-105 active:scale-95 cursor-pointer" data-avatar-url="${p.url}" title="${p.label}">
+          <img src="${p.url}" alt="${p.label}" class="w-10 h-10 rounded-full object-cover shadow-sm">
+        </button>
+      `).join('');
+
+      presetsGrid.querySelectorAll('.avatar-preset-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const url = btn.getAttribute('data-avatar-url');
+          if (url) {
+            updateUserAvatar(url, true);
+          }
+        });
+      });
+    }
+
+    updatePresetHighlights(activeUrl);
+  }
+
   function renderProfileView() {
     const user = state.currentUser;
     if (!user) {
@@ -1012,6 +1122,12 @@ document.addEventListener('DOMContentLoaded', () => {
     if (phoneEl) phoneEl.textContent = user.phone;
     if (emailEl) emailEl.textContent = user.email;
     if (avatarEl) avatarEl.src = user.avatar;
+
+    const formAvatarEl = document.getElementById('form-avatar-preview');
+    if (formAvatarEl) formAvatarEl.src = user.avatar;
+
+    // Render presets grid and active highlights
+    renderAvatarPresets(user.avatar);
 
     // Populate Edit Form Inputs
     const editName = document.getElementById('edit-user-name');
@@ -1198,6 +1314,44 @@ document.addEventListener('DOMContentLoaded', () => {
       renderAuthUI();
       renderProfileView();
       showToast('Profil akun dan nomor kontak berhasil diperbarui! ✨');
+    });
+  }
+
+  // Profile Avatar Listeners (File upload, camera triggers & presets)
+  const inputAvatarFile = document.getElementById('input-avatar-file');
+  if (inputAvatarFile) {
+    inputAvatarFile.addEventListener('change', async (e) => {
+      const file = e.target.files && e.target.files[0];
+      if (!file) return;
+      try {
+        showToast('Memproses foto profil...', 'info');
+        const dataUrl = await resizeImageToDataUrl(file);
+        updateUserAvatar(dataUrl, true);
+      } catch (err) {
+        console.error(err);
+        showToast(err.message || 'Gagal memproses gambar.', 'error');
+      } finally {
+        inputAvatarFile.value = '';
+      }
+    });
+  }
+
+  ['btn-trigger-banner-avatar', 'btn-banner-camera-badge', 'btn-trigger-form-avatar'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) {
+      el.addEventListener('click', (e) => {
+        e.preventDefault();
+        const input = document.getElementById('input-avatar-file');
+        if (input) input.click();
+      });
+    }
+  });
+
+  const btnResetAvatar = document.getElementById('btn-reset-avatar-default');
+  if (btnResetAvatar) {
+    btnResetAvatar.addEventListener('click', (e) => {
+      e.preventDefault();
+      updateUserAvatar(DEFAULT_AVATAR, true);
     });
   }
 
