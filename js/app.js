@@ -456,6 +456,18 @@ document.addEventListener('DOMContentLoaded', () => {
       elements.drawerInstallAppBanner.classList.toggle('hidden', isApp);
     }
 
+    // Toggle Download App Header Button
+    const btnInstallAppHeader = document.getElementById('btn-install-app-header');
+    if (btnInstallAppHeader) {
+      if (isApp) {
+        btnInstallAppHeader.classList.add('hidden');
+        btnInstallAppHeader.classList.remove('inline-flex');
+      } else {
+        btnInstallAppHeader.classList.remove('hidden');
+        btnInstallAppHeader.classList.add('inline-flex');
+      }
+    }
+
     if (mobileDrawerAdminBtn) {
       if (isAdmin) {
         mobileDrawerAdminBtn.classList.remove('hidden');
@@ -3403,7 +3415,12 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     };
 
-    // Open PWA Modal triggers (Drawer, User Dropdown, Footer)
+    // Open PWA Modal triggers (Header, Drawer, User Dropdown, Footer)
+    const btnInstallAppHeader = document.getElementById('btn-install-app-header');
+    if (btnInstallAppHeader) {
+      btnInstallAppHeader.addEventListener('click', openInstallModal);
+    }
+
     document.addEventListener('click', (e) => {
       if (e.target.closest('#btn-dropdown-pwa-modal') || e.target.closest('#btn-footer-download-app')) {
         e.preventDefault();

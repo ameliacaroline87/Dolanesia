@@ -3,7 +3,7 @@
  * Offline caching support for Solo Raya Smart Itinerary Planner
  */
 
-const CACHE_NAME = 'dolanesia-v20';
+const CACHE_NAME = 'dolanesia-v21';
 const ASSETS_TO_CACHE = [
   './',
   './index.html',
