@@ -35,6 +35,19 @@ body {
   }
 }
 
+/* Desktop Navbar Links Formatting (Strict 1-line Horizontal Alignment) */
+.desktop-nav-link {
+  white-space: nowrap !important;
+  flex-shrink: 0 !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  line-height: 1.2 !important;
+}
+
+#desktop-nav-links {
+  flex-wrap: nowrap !important;
+}
+
 /* Sembunyikan tombol menu hamburger (garis 3) karena semua navigasi mobile sudah ada di bilah bawah (bottom-nav) */
 #btn-mobile-menu {
   display: none !important;

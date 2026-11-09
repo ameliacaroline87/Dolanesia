@@ -430,16 +430,7 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     }
 
-    // Toggle Download App Buttons based on Standalone App vs Web Browser mode
-    if (elements.btnInstallAppHeader) {
-      if (isApp) {
-        elements.btnInstallAppHeader.classList.add('hidden');
-        elements.btnInstallAppHeader.classList.remove('inline-flex');
-      } else {
-        elements.btnInstallAppHeader.classList.remove('hidden');
-        elements.btnInstallAppHeader.classList.add('inline-flex');
-      }
-    }
+    // Toggle Mobile Drawer Download Banner
     if (elements.drawerInstallAppBanner) {
       elements.drawerInstallAppBanner.classList.toggle('hidden', isApp);
     }
@@ -624,6 +615,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 <span class="px-2 py-0.2 rounded-full bg-amber-100 text-amber-800 text-[10px] font-bold">
                   ${state.customItinerary.length}
                 </span>
+              </button>
+
+              <button id="btn-dropdown-pwa-modal" class="w-full text-left px-4 py-2.5 text-xs text-amber-700 hover:bg-amber-50 font-bold flex items-center gap-2.5 transition-colors">
+                <i data-lucide="download" class="w-4 h-4 text-amber-600"></i>
+                <span>Download Aplikasi (PWA)</span>
               </button>
 
               <div class="border-t border-slate-100 my-1"></div>
@@ -3349,14 +3345,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (isApp) {
       document.body.classList.add('is-standalone-app');
-      if (elements.btnInstallAppHeader) elements.btnInstallAppHeader.classList.add('hidden');
       if (elements.drawerInstallAppBanner) elements.drawerInstallAppBanner.classList.add('hidden');
     } else {
       document.body.classList.remove('is-standalone-app');
-      if (elements.btnInstallAppHeader) {
-        elements.btnInstallAppHeader.classList.remove('hidden');
-        elements.btnInstallAppHeader.classList.add('inline-flex');
-      }
       if (elements.drawerInstallAppBanner) {
         elements.drawerInstallAppBanner.classList.remove('hidden');
       }
@@ -3375,7 +3366,6 @@ document.addEventListener('DOMContentLoaded', () => {
     window.addEventListener('appinstalled', () => {
       deferredInstallPrompt = null;
       document.body.classList.add('is-standalone-app');
-      if (elements.btnInstallAppHeader) elements.btnInstallAppHeader.classList.add('hidden');
       if (elements.drawerInstallAppBanner) elements.drawerInstallAppBanner.classList.add('hidden');
       if (elements.pwaInstallModal) closeModal(elements.pwaInstallModal);
       showToast('Aplikasi DOLANESIA berhasil dipasang! Buka langsung dari layar utama HP Anda. 🎉', 'success');
@@ -3392,9 +3382,16 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     };
 
-    if (elements.btnInstallAppHeader) {
-      elements.btnInstallAppHeader.addEventListener('click', openInstallModal);
-    }
+    // Open PWA Modal triggers (Drawer, User Dropdown, Footer)
+    document.addEventListener('click', (e) => {
+      if (e.target.closest('#btn-dropdown-pwa-modal') || e.target.closest('#btn-footer-download-app')) {
+        e.preventDefault();
+        const menuEl = document.getElementById('user-dropdown-menu');
+        if (menuEl) menuEl.classList.add('hidden');
+        openInstallModal();
+      }
+    });
+
     if (elements.btnInstallAppDrawer) {
       elements.btnInstallAppDrawer.addEventListener('click', () => {
         if (elements.mobileMenuDrawer) {

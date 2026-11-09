@@ -99,22 +99,22 @@
       </a>
 
       <!-- Desktop Nav Links (Per Page Tabs for Tourists) -->
-      <nav id="desktop-nav-links" class="hidden lg:flex items-center gap-6 text-xs font-bold uppercase tracking-wider text-slate-600">
-        <button data-page-target="beranda" class="desktop-nav-link nav-link-active hover:text-amber-600 transition-colors py-1">
+      <nav id="desktop-nav-links" class="hidden lg:flex items-center gap-4 xl:gap-7 text-xs font-bold uppercase tracking-wider text-slate-600 flex-nowrap flex-shrink-0">
+        <button data-page-target="beranda" class="desktop-nav-link nav-link-active hover:text-amber-600 transition-colors py-1 whitespace-nowrap flex-shrink-0">
           Beranda
         </button>
-        <button data-page-target="planner" class="desktop-nav-link hover:text-amber-600 transition-colors py-1 flex items-center gap-1">
-          <span class="w-1.5 h-1.5 rounded-full bg-amber-600"></span>
-          Auto-Planner
+        <button data-page-target="planner" class="desktop-nav-link hover:text-amber-600 transition-colors py-1 flex items-center gap-1.5 whitespace-nowrap flex-shrink-0">
+          <span class="w-1.5 h-1.5 rounded-full bg-amber-600 flex-shrink-0"></span>
+          <span>Auto-Planner</span>
         </button>
-        <button data-page-target="direktori" class="desktop-nav-link hover:text-amber-600 transition-colors py-1">
+        <button data-page-target="direktori" class="desktop-nav-link hover:text-amber-600 transition-colors py-1 whitespace-nowrap flex-shrink-0">
           Direktori Kuliner & Wisata
         </button>
-        <button data-page-target="buddy" class="desktop-nav-link hover:text-amber-600 transition-colors py-1 flex items-center gap-1">
-          Travel Buddy
-          <span class="px-1.5 py-0.2 rounded-full text-[9px] bg-emerald-100 text-emerald-700 font-bold">Open Trip</span>
+        <button data-page-target="buddy" class="desktop-nav-link hover:text-amber-600 transition-colors py-1 flex items-center gap-1.5 whitespace-nowrap flex-shrink-0">
+          <span>Travel Buddy</span>
+          <span class="px-1.5 py-0.2 rounded-full text-[9px] bg-emerald-100 text-emerald-700 font-bold whitespace-nowrap flex-shrink-0">Open Trip</span>
         </button>
-        <button data-page-target="tentang" class="desktop-nav-link hover:text-amber-600 transition-colors py-1">
+        <button data-page-target="tentang" class="desktop-nav-link hover:text-amber-600 transition-colors py-1 whitespace-nowrap flex-shrink-0">
           Tentang Kami
         </button>
       </nav>
@@ -138,13 +138,6 @@
         <button data-page-target="admin" id="btn-navbar-return-admin" class="hidden px-2.5 sm:px-3.5 py-1.5 sm:py-2 rounded-xl bg-slate-900 hover:bg-amber-600 text-amber-300 hover:text-white border border-amber-500/40 font-bold text-xs shadow-sm transition-all hover:scale-105 active:scale-95 cursor-pointer items-center gap-1 sm:gap-1.5" title="Kembali ke Beranda Admin">
           <i data-lucide="shield" class="w-4 h-4 text-amber-400"></i>
           <span class="hidden sm:inline">Beranda Admin</span>
-        </button>
-
-        <!-- PWA Install Button in Header (Visible on browser, hidden in standalone app mode) -->
-        <button id="btn-install-app-header" class="hidden items-center gap-1.5 px-2.5 sm:px-3 py-1.5 sm:py-2 rounded-xl bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-200/80 font-bold text-xs transition-all shadow-xs hover:scale-105 active:scale-95 cursor-pointer" title="Download & Pasang Aplikasi DOLANESIA">
-          <i data-lucide="download" class="w-3.5 h-3.5 sm:w-4 sm:h-4 text-amber-600"></i>
-          <span class="hidden sm:inline">Download App</span>
-          <span class="sm:hidden">App</span>
         </button>
 
         <!-- Floating Cart Trigger -->
@@ -1401,6 +1394,7 @@
             <li><button data-page-target="direktori" class="hover:text-amber-400 transition-colors">Direktori Kuliner & Wisata</button></li>
             <li><button data-page-target="buddy" class="hover:text-amber-400 transition-colors">Solo-to-Social Travel Buddy</button></li>
             <li><button data-page-target="tentang" class="hover:text-amber-400 transition-colors">Tentang Kami & FAQ</button></li>
+            <li><button id="btn-footer-download-app" class="hover:text-amber-400 text-amber-300 font-bold flex items-center gap-1.5 transition-colors cursor-pointer"><i data-lucide="download" class="w-3.5 h-3.5"></i> Download Aplikasi (PWA)</button></li>
           </ul>
         </div>
 
