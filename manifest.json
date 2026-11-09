@@ -1,0 +1,20 @@
+{
+  "name": "DOLANESIA - Smart Solo Raya Tourism Planner",
+  "short_name": "DOLANESIA",
+  "description": "Platform perencana liburan pintar & komunitas open trip Solo Raya",
+  "start_url": "./index.html?source=pwa",
+  "scope": "./",
+  "id": "dolanesia-solo-raya-pwa",
+  "display": "standalone",
+  "background_color": "#FAFAF9",
+  "theme_color": "#D95D39",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "assets/img/logo-icon.png",
+      "sizes": "192x192 512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

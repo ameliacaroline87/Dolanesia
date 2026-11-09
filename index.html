@@ -1,0 +1,1981 @@
+<!DOCTYPE html>
+<html lang="id" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>DOLANESIA - Smart Tourism Itinerary Planner & Travel Buddy Solo Raya</title>
+  <meta name="description" content="Platform perencana liburan pintar & sosial pariwisata Solo Raya (Surakarta, Karanganyar, Boyolali, Sukoharjo, Klaten). Jelajahi Solo tanpa ribet dan tanpa sendirian!">
+  
+  <!-- Favicon / PWA -->
+  <link rel="icon" type="image/png" href="assets/img/logo-icon.png">
+  <link rel="apple-touch-icon" href="assets/img/logo-icon.png">
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#D95D39">
+
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            amber: {
+              50: '#FDF8F6',
+              100: '#F2E8E5',
+              200: '#EADDD7',
+              500: '#E06945',
+              600: '#D95D39', // Solo Terracotta Core
+              700: '#B84724',
+              800: '#8C3215',
+              900: '#5C1E0A',
+            },
+            sogan: {
+              DEFAULT: '#2C1810', // Batik Sogan Keraton
+              light: '#42281D',
+              dark: '#1A0E0A',
+            },
+            soloGreen: {
+              DEFAULT: '#059669', // Fresh Nature Karanganyar
+              light: '#10B981',
+            }
+          },
+          fontFamily: {
+            sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+            serif: ['"Playfair Display"', 'serif'],
+          }
+        }
+      }
+    }
+  </script>
+
+  <!-- Lucide Icons CDN -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+
+  <!-- Custom CSS -->
+  <link rel="stylesheet" href="css/custom.css">
+</head>
+<body class="bg-batik-subtle text-slate-800 antialiased selection:bg-amber-100 selection:text-amber-900 pb-20 md:pb-0 min-h-screen flex flex-col justify-between">
+
+  <!-- PRINT-ONLY HEADER WITH BRAND LOGO -->
+  <div class="hidden print:block p-6 mb-4 border-b-2 border-slate-800 text-center">
+    <img src="assets/img/logo-corner.png" alt="DOLANESIA - Teman Jalan Pintar" class="h-20 mx-auto object-contain mb-2">
+    <h1 class="text-2xl font-bold font-serif-jawa">Rencana Perjalanan Wisata Solo Raya</h1>
+    <p class="text-xs text-slate-600">Disusun otomatis dengan DOLANESIA • Solo Raya Smart Tourism Planner</p>
+  </div>
+
+  <!-- TOAST CONTAINER FOR NOTIFICATIONS -->
+  <div id="toast-container" class="fixed top-5 right-5 z-[100] flex flex-col gap-2 pointer-events-none max-w-sm w-full px-4"></div>
+
+  <!-- ADMIN MODE PREVIEW TOP BANNER (Visible ONLY to Admins when viewing Tourist Views) -->
+  <div id="admin-preview-top-banner" class="hidden bg-gradient-to-r from-slate-950 via-slate-900 to-amber-950 text-white text-xs px-4 sm:px-6 py-2 border-b border-amber-500/30 relative z-50 transition-all shadow-md">
+    <div class="max-w-7xl mx-auto flex items-center justify-between gap-3">
+      <div class="flex items-center gap-2">
+        <span class="w-2.5 h-2.5 rounded-full bg-amber-400 animate-pulse flex-shrink-0"></span>
+        <span class="font-bold text-amber-300 font-serif-jawa text-xs">Mode Pratinjau Wisatawan (Administrator)</span>
+        <span class="text-slate-300 hidden md:inline text-[11px]">— Anda sedang melihat website dari sudut pandang pengunjung</span>
+      </div>
+      <button data-page-target="admin" class="px-3.5 py-1.5 bg-gradient-to-r from-amber-600 to-amber-500 hover:from-amber-500 hover:to-amber-600 text-white text-xs font-bold rounded-xl shadow-md transition-all flex items-center gap-1.5 cursor-pointer hover:scale-105 active:scale-95">
+        <i data-lucide="shield" class="w-3.5 h-3.5 text-amber-200"></i>
+        <span>Kembali ke Beranda Admin</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- HEADER / NAVBAR -->
+  <header class="sticky top-0 z-40 glass-nav border-b border-slate-200/70 transition-all">
+    <div class="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 h-16 sm:h-18 py-2.5 sm:py-3.5 flex items-center justify-between gap-2">
+      
+      <!-- Brand Logo (Pojok Kiri, No Background) -->
+      <a href="#beranda" data-page-target="beranda" class="nav-brand flex items-center gap-2 group py-0.5 flex-shrink-0">
+        <img src="assets/img/logo-corner.png" alt="DOLANESIA Mascot" class="h-9 sm:h-12 w-auto object-contain transition-transform duration-300 group-hover:scale-110 drop-shadow-sm flex-shrink-0">
+        <div>
+          <div class="flex items-center gap-1 sm:gap-1.5">
+            <span class="text-lg sm:text-2xl font-black tracking-tight text-slate-900 font-serif-jawa leading-none">DOLANESIA</span>
+            <span class="text-[9px] uppercase font-extrabold tracking-widest px-1.5 py-0.5 rounded-full bg-amber-100 text-amber-800 border border-amber-200 hidden xs:inline-block sm:inline-block">Solo Raya</span>
+          </div>
+          <p class="text-[8px] sm:text-[9px] text-amber-700 font-extrabold tracking-wider mt-0.5 hidden sm:block">TEMAN JALAN PINTAR</p>
+        </div>
+      </a>
+
+      <!-- Desktop Nav Links (Per Page Tabs for Tourists) -->
+      <nav id="desktop-nav-links" class="hidden lg:flex items-center gap-6 text-xs font-bold uppercase tracking-wider text-slate-600">
+        <button data-page-target="beranda" class="desktop-nav-link nav-link-active hover:text-amber-600 transition-colors py-1">
+          Beranda
+        </button>
+        <button data-page-target="planner" class="desktop-nav-link hover:text-amber-600 transition-colors py-1 flex items-center gap-1">
+          <span class="w-1.5 h-1.5 rounded-full bg-amber-600"></span>
+          Auto-Planner
+        </button>
+        <button data-page-target="direktori" class="desktop-nav-link hover:text-amber-600 transition-colors py-1">
+          Direktori Kuliner & Wisata
+        </button>
+        <button data-page-target="buddy" class="desktop-nav-link hover:text-amber-600 transition-colors py-1 flex items-center gap-1">
+          Travel Buddy
+          <span class="px-1.5 py-0.2 rounded-full text-[9px] bg-emerald-100 text-emerald-700 font-bold">Open Trip</span>
+        </button>
+        <button data-page-target="tentang" class="desktop-nav-link hover:text-amber-600 transition-colors py-1">
+          Tentang Kami
+        </button>
+      </nav>
+
+      <!-- Admin Workspace Navigation (Visible ONLY when inside #view-admin) -->
+      <div id="navbar-admin-center" class="hidden items-center gap-2 sm:gap-3">
+        <span class="px-2.5 sm:px-3 py-1 rounded-xl bg-slate-900 text-amber-300 font-black text-xs uppercase tracking-wider border border-amber-500/30 hidden md:flex items-center gap-1.5 shadow-sm">
+          <i data-lucide="shield-check" class="w-3.5 h-3.5 text-amber-400"></i>
+          <span>Admin Command Center</span>
+        </span>
+        <button data-page-target="beranda" class="px-2.5 sm:px-3.5 py-1.5 rounded-xl bg-white hover:bg-slate-50 text-slate-800 hover:text-amber-700 border border-slate-200 text-xs font-bold transition-all shadow-xs flex items-center gap-1.5 cursor-pointer">
+          <i data-lucide="eye" class="w-3.5 h-3.5 text-amber-600"></i>
+          <span class="hidden sm:inline">Lihat Tampilan Wisatawan</span>
+          <span class="sm:hidden">Wisatawan</span>
+        </button>
+      </div>
+
+      <!-- Header Actions (Cart, Return to Admin, Auth, Mobile Menu) -->
+      <div class="flex items-center gap-1.5 sm:gap-3 flex-shrink-0">
+        <!-- Quick Return to Admin Button (Visible ONLY to Admins when viewing tourist pages) -->
+        <button data-page-target="admin" id="btn-navbar-return-admin" class="hidden px-2.5 sm:px-3.5 py-1.5 sm:py-2 rounded-xl bg-slate-900 hover:bg-amber-600 text-amber-300 hover:text-white border border-amber-500/40 font-bold text-xs shadow-sm transition-all hover:scale-105 active:scale-95 cursor-pointer items-center gap-1 sm:gap-1.5" title="Kembali ke Beranda Admin">
+          <i data-lucide="shield" class="w-4 h-4 text-amber-400"></i>
+          <span class="hidden sm:inline">Beranda Admin</span>
+        </button>
+
+        <!-- PWA Install Button in Header (Visible on browser, hidden in standalone app mode) -->
+        <button id="btn-install-app-header" class="hidden items-center gap-1.5 px-2.5 sm:px-3 py-1.5 sm:py-2 rounded-xl bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-200/80 font-bold text-xs transition-all shadow-xs hover:scale-105 active:scale-95 cursor-pointer" title="Download & Pasang Aplikasi DOLANESIA">
+          <i data-lucide="download" class="w-3.5 h-3.5 sm:w-4 sm:h-4 text-amber-600"></i>
+          <span class="hidden sm:inline">Download App</span>
+          <span class="sm:hidden">App</span>
+        </button>
+
+        <!-- Floating Cart Trigger -->
+        <button id="btn-cart-floating" class="relative p-2 sm:p-2.5 rounded-xl border border-slate-200/80 bg-white/80 hover:bg-white text-slate-700 shadow-sm transition-all hover:border-amber-300" title="Rencana Saya">
+          <i data-lucide="bookmark" class="w-4 h-4 sm:w-5 sm:h-5 text-amber-600"></i>
+          <span id="cart-badge-count" class="absolute -top-1.5 -right-1.5 w-4 h-4 sm:w-5 sm:h-5 rounded-full bg-amber-600 text-white text-[10px] sm:text-[11px] font-bold flex items-center justify-center shadow-sm">
+            0
+          </span>
+        </button>
+
+        <!-- AUTH CONTAINER (Switches between Login Button & User Profile Menu) -->
+        <div id="nav-auth-container" class="relative">
+          <!-- Injected dynamically by js/app.js -->
+        </div>
+
+        <!-- Mobile Menu Toggle Button -->
+        <button id="btn-mobile-menu" class="p-2 sm:p-2.5 rounded-xl lg:hidden text-slate-700 hover:bg-slate-100 transition-colors" aria-label="Buka Menu">
+          <i data-lucide="menu" class="w-5 h-5 sm:w-6 sm:h-6"></i>
+        </button>
+      </div>
+
+    </div>
+  </header>
+
+  <!-- MOBILE SLIDE-OVER DRAWER -->
+  <div id="mobile-drawer" class="fixed inset-0 z-50 transform -translate-x-full transition-transform duration-300 ease-in-out lg:hidden flex">
+    <div class="w-72 sm:w-80 bg-white h-full shadow-2xl p-6 flex flex-col justify-between border-r border-slate-100 overflow-y-auto">
+      <div>
+        <!-- Drawer Header (Pojok Kiri, No Background) -->
+        <div class="flex items-center justify-between pb-4 border-b border-slate-100">
+          <div class="flex items-center gap-2.5">
+            <img src="assets/img/logo-corner.png" alt="DOLANESIA Mascot" class="h-10 w-auto object-contain flex-shrink-0">
+            <div>
+              <span class="font-black text-slate-900 font-serif-jawa text-base block leading-none">DOLANESIA</span>
+              <span class="text-[9px] text-amber-700 font-extrabold tracking-wider block mt-0.5">TEMAN JALAN PINTAR</span>
+            </div>
+          </div>
+          <button id="btn-close-mobile-menu" class="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100">
+            <i data-lucide="x" class="w-5 h-5"></i>
+          </button>
+        </div>
+
+        <!-- Mobile User Card / Login Banner -->
+        <div id="mobile-drawer-auth-banner" class="mt-4 p-3 bg-amber-50 rounded-2xl border border-amber-200/80">
+          <!-- Injected dynamically by app.js -->
+        </div>
+
+        <!-- PWA Install Banner inside Drawer -->
+        <div id="drawer-install-app-banner" class="mt-3 p-3.5 bg-gradient-to-br from-amber-500 via-amber-600 to-amber-700 text-white rounded-2xl shadow-sm space-y-2.5">
+          <div class="flex items-center gap-2.5">
+            <div class="w-8 h-8 rounded-xl bg-white/20 flex items-center justify-center flex-shrink-0 shadow-xs">
+              <i data-lucide="smartphone" class="w-4 h-4 text-white"></i>
+            </div>
+            <div>
+              <p class="font-extrabold text-xs">Aplikasi DOLANESIA</p>
+              <p class="text-[10px] text-amber-100">Buka langsung dari Layar Utama HP</p>
+            </div>
+          </div>
+          <button id="btn-install-app-drawer" class="w-full py-2 bg-white text-amber-800 hover:bg-amber-50 rounded-xl font-extrabold text-xs flex items-center justify-center gap-1.5 shadow-sm transition-all cursor-pointer hover:scale-[1.02] active:scale-95">
+            <i data-lucide="download" class="w-3.5 h-3.5 text-amber-600"></i>
+            <span>Download & Pasang di HP</span>
+          </button>
+        </div>
+
+        <!-- Navigation Links (Per-page triggers) -->
+        <nav class="mt-5 flex flex-col gap-2 text-sm font-bold text-slate-700">
+          <button data-page-target="beranda" class="mobile-nav-link text-left p-2.5 rounded-xl hover:bg-amber-50 hover:text-amber-700 flex items-center gap-3 transition-colors">
+            <i data-lucide="home" class="w-4 h-4 text-amber-600"></i> Beranda
+          </button>
+          <button data-page-target="planner" class="mobile-nav-link text-left p-2.5 rounded-xl hover:bg-amber-50 hover:text-amber-700 flex items-center gap-3 transition-colors">
+            <i data-lucide="calendar" class="w-4 h-4 text-amber-600"></i> Auto-Itinerary Generator
+          </button>
+          <button data-page-target="direktori" class="mobile-nav-link text-left p-2.5 rounded-xl hover:bg-amber-50 hover:text-amber-700 flex items-center gap-3 transition-colors">
+            <i data-lucide="utensils" class="w-4 h-4 text-amber-600"></i> Direktori Kuliner & Wisata
+          </button>
+          <button data-page-target="buddy" class="mobile-nav-link text-left p-2.5 rounded-xl hover:bg-amber-50 hover:text-amber-700 flex items-center gap-3 transition-colors">
+            <i data-lucide="users" class="w-4 h-4 text-amber-600"></i> Solo-to-Social Travel Buddy
+          </button>
+          <button data-page-target="tentang" class="mobile-nav-link text-left p-2.5 rounded-xl hover:bg-amber-50 hover:text-amber-700 flex items-center gap-3 transition-colors">
+            <i data-lucide="info" class="w-4 h-4 text-amber-600"></i> Tentang Kami & Solo Raya
+          </button>
+          
+          <div class="pt-2 border-t border-slate-100">
+            <button data-page-target="profil" class="mobile-nav-link text-left p-2.5 rounded-xl hover:bg-amber-50 hover:text-amber-700 flex items-center gap-3 transition-colors w-full">
+              <i data-lucide="user-cog" class="w-4 h-4 text-amber-600"></i> Akun & Profil Saya
+            </button>
+            <button id="btn-mobile-drawer-admin" data-page-target="admin" class="hidden mobile-nav-link text-left p-2.5 rounded-xl hover:bg-purple-50 text-purple-700 flex items-center gap-3 transition-colors w-full">
+              <i data-lucide="shield" class="w-4 h-4 text-purple-600"></i> Dashboard Administrator
+            </button>
+          </div>
+        </nav>
+      </div>
+
+      <!-- Drawer Footer -->
+      <div class="pt-6 border-t border-slate-100 text-xs text-slate-500">
+        <p class="font-medium text-slate-700">DOLANESIA App v2.8</p>
+        <p class="text-[11px] text-slate-400 mt-0.5">Platform Perjalanan Cerdas Wilayah Solo Raya</p>
+        <p class="text-[10px] text-amber-700 font-semibold mt-1">© 2026 BizVibe Quintet</p>
+      </div>
+    </div>
+    
+    <!-- Drawer Backdrop -->
+    <div class="flex-grow bg-black/40 backdrop-blur-sm" onclick="document.getElementById('mobile-drawer').classList.add('-translate-x-full')"></div>
+  </div>
+
+  <!-- MAIN MULTI-PAGE CONTENT WRAPPER -->
+  <main id="main-content" class="flex-grow">
+    
+    <!-- ========================================== -->
+    <!-- 1. HALAMAN BERANDA (HOME VIEW) -->
+    <!-- ========================================== -->
+    <div id="view-beranda" class="page-view">
+      
+      <!-- HERO SECTION -->
+      <section class="relative overflow-hidden pt-8 pb-14 lg:pt-16 lg:pb-20">
+        <div class="absolute top-0 right-0 -mr-20 -mt-20 w-96 h-96 bg-amber-400/10 rounded-full blur-3xl pointer-events-none"></div>
+        <div class="absolute bottom-0 left-0 -ml-20 -mb-20 w-80 h-80 bg-emerald-400/10 rounded-full blur-3xl pointer-events-none"></div>
+
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+          <div class="grid grid-cols-1 lg:grid-cols-12 gap-10 items-center">
+            
+            <!-- Text Left Column -->
+            <div class="lg:col-span-7 space-y-6 text-center lg:text-left">
+              
+              <div class="inline-flex items-center gap-2.5 px-3.5 py-1.5 rounded-full bg-amber-50 border border-amber-200 text-amber-900 text-xs font-bold shadow-sm">
+                <img src="assets/img/logo-corner.png" alt="Dola Mascot" class="h-6 w-auto object-contain -my-1">
+                <span>Halo! Kenalkan aku <strong>Dola</strong>, Teman Jalan Pintarmu di Solo Raya 👋</span>
+              </div>
+
+              <h1 class="text-3xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight text-slate-900 font-serif-jawa leading-[1.2]">
+                Jelajahi Solo Tanpa Ribet & <span class="text-amber-600 underline decoration-amber-300 decoration-wavy decoration-2">Tanpa Sendirian</span>
+              </h1>
+
+              <p class="text-sm sm:text-base text-slate-600 leading-relaxed max-w-2xl mx-auto lg:mx-0">
+                Platform smart tourism itinerary planner & travel buddy matching terdepan di Solo Raya (Surakarta, Karanganyar, Boyolali, Sukoharjo, Klaten). Susun jadwal liburan otomatis per jam, cicipi kuliner legendaris pusaka, dan temukan teman jalan seru di open trip lokal.
+              </p>
+
+              <!-- CTAs -->
+              <div class="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-3.5 pt-2">
+                <button data-page-target="planner" class="w-full sm:w-auto px-6 py-3.5 rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-bold text-sm shadow-xl shadow-amber-600/30 transition-all hover:scale-102 active:scale-98 flex items-center justify-center gap-2">
+                  <i data-lucide="sparkles" class="w-4 h-4"></i>
+                  <span>Mulai Buat Itinerary</span>
+                </button>
+
+                <button data-page-target="buddy" class="w-full sm:w-auto px-6 py-3.5 rounded-xl bg-white hover:bg-slate-50 border border-slate-200 text-slate-800 font-bold text-sm shadow-sm transition-all hover:border-amber-300 flex items-center justify-center gap-2">
+                  <i data-lucide="users" class="w-4 h-4 text-emerald-600"></i>
+                  <span>Cari Teman Liburan (Open Trip)</span>
+                </button>
+              </div>
+
+              <!-- Trust Badges & Highlights -->
+              <div class="pt-6 grid grid-cols-3 gap-3 border-t border-slate-200/80 text-left">
+                <div>
+                  <p class="text-lg sm:text-2xl font-extrabold text-slate-900 font-serif-jawa">50+</p>
+                  <p class="text-xs text-slate-500 font-medium">Wisata & Kuliner Terkurasi</p>
+                </div>
+                <div>
+                  <p class="text-lg sm:text-2xl font-extrabold text-slate-900 font-serif-jawa">1.2k+</p>
+                  <p class="text-xs text-slate-500 font-medium">Solo Traveler Terhubung</p>
+                </div>
+                <div>
+                  <p class="text-lg sm:text-2xl font-extrabold text-amber-600 font-serif-jawa flex items-center gap-1">
+                    4.9 <i data-lucide="star" class="w-4 h-4 fill-amber-500 text-amber-500"></i>
+                  </p>
+                  <p class="text-xs text-slate-500 font-medium">Ulasan Pengalaman Asli</p>
+                </div>
+              </div>
+
+            </div>
+
+            <!-- Visual Right Column (Hero Banner Showcase) -->
+            <div class="lg:col-span-5 relative">
+              <div class="relative mx-auto max-w-md lg:max-w-none">
+                
+                <!-- Main Hero Card -->
+                <div class="rounded-3xl overflow-hidden shadow-2xl border-4 border-white relative z-10 group">
+                  <img src="assets/img/pura-mangkunegaran.jpg" alt="Pura Mangkunegaran & Pesona Solo Raya" class="w-full h-80 sm:h-96 object-cover group-hover:scale-105 transition-transform duration-700">
+                  <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent"></div>
+                  
+                  <div class="absolute bottom-5 left-5 right-5 text-white">
+                    <span class="inline-block px-2.5 py-1 rounded-md text-[11px] font-bold bg-amber-600 mb-2">
+                      Destinasi Ikonik Hari Ini
+                    </span>
+                    <h3 class="text-lg sm:text-xl font-bold font-serif-jawa">Pura Mangkunegaran & Pracima Tuin</h3>
+                    <p class="text-xs text-white/80 mt-1 line-clamp-2">Kemegahan istana Jawa klasik berpadu dengan taman asri nan elegan di jantung Kota Surakarta.</p>
+                  </div>
+                </div>
+
+                <!-- Floating Badge 1: Official Brand Mascot Badge (No Background) -->
+                <div class="absolute -top-3 left-2 sm:-top-5 sm:-left-6 bg-white/95 backdrop-blur-md p-2 sm:p-2.5 pr-3 sm:pr-4 rounded-2xl shadow-xl border border-slate-100 flex items-center gap-2 sm:gap-2.5 z-20 animate-float">
+                  <img src="assets/img/logo-corner.png" alt="Dolanesia Mascot Dola" class="h-9 sm:h-11 w-auto object-contain flex-shrink-0 drop-shadow-sm">
+                  <div class="text-left">
+                    <p class="text-[9px] sm:text-[10px] text-amber-600 font-extrabold uppercase tracking-wider">Dolanesia Official</p>
+                    <p class="text-[11px] sm:text-xs font-bold text-slate-800">Teman Jalan Pintar</p>
+                  </div>
+                </div>
+
+                <!-- Floating Badge 2: Travel Buddy Active -->
+                <div class="absolute -bottom-3 right-2 sm:-bottom-5 sm:-right-6 bg-white/95 backdrop-blur-md p-2.5 sm:p-3.5 rounded-2xl shadow-xl border border-slate-100 flex items-center gap-2 sm:gap-3 z-20">
+                  <div class="flex -space-x-2">
+                    <img class="w-7 h-7 sm:w-8 sm:h-8 rounded-full border-2 border-white object-cover" src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=100&q=80" alt="Traveler 1">
+                    <img class="w-7 h-7 sm:w-8 sm:h-8 rounded-full border-2 border-white object-cover" src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=100&q=80" alt="Traveler 2">
+                    <img class="w-7 h-7 sm:w-8 sm:h-8 rounded-full border-2 border-white object-cover" src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=100&q=80" alt="Traveler 3">
+                  </div>
+                  <div class="text-left">
+                    <p class="text-[10px] sm:text-[11px] text-emerald-600 font-bold flex items-center gap-1">
+                      <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> 4 Open Trip
+                    </p>
+                    <p class="text-[11px] sm:text-xs font-semibold text-slate-700">Yuk jalan bareng!</p>
+                  </div>
+                </div>
+
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </section>
+
+      <!-- MENU PINTAS CEPAT (QUICK NAVIGATION CARDS) -->
+      <section class="py-10 bg-white border-y border-slate-200/80">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div class="text-center max-w-xl mx-auto mb-8">
+            <h2 class="text-xl sm:text-2xl font-bold font-serif-jawa text-slate-900">Eksplorasi Fitur Dolanesia</h2>
+            <p class="text-xs text-slate-500 mt-1">Pilih menu di bawah atau gunakan navigasi di header atas.</p>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-5">
+            <!-- Card 1 -->
+            <div data-page-target="planner" class="cursor-pointer group p-6 rounded-2xl bg-gradient-to-br from-amber-50 to-orange-50 border border-amber-200/80 hover:shadow-xl hover:-translate-y-1 transition-all">
+              <div class="w-12 h-12 rounded-xl bg-amber-600 text-white flex items-center justify-center mb-4 group-hover:scale-110 transition-transform shadow-md shadow-amber-600/30">
+                <i data-lucide="sparkles" class="w-6 h-6"></i>
+              </div>
+              <h3 class="text-base font-bold text-slate-900 group-hover:text-amber-600 transition-colors">Auto-Itinerary Generator</h3>
+              <p class="text-xs text-slate-600 mt-1.5 leading-relaxed">Susun jadwal liburan 1-3 hari otomatis per jam sesuai budget dan minatmu tanpa pusing.</p>
+              <span class="inline-flex items-center gap-1 text-xs font-bold text-amber-700 mt-4 group-hover:translate-x-1 transition-transform">
+                Buka Generator <i data-lucide="arrow-right" class="w-3.5 h-3.5"></i>
+              </span>
+            </div>
+
+            <!-- Card 2 -->
+            <div data-page-target="direktori" class="cursor-pointer group p-6 rounded-2xl bg-gradient-to-br from-orange-50 to-amber-50 border border-orange-200/80 hover:shadow-xl hover:-translate-y-1 transition-all">
+              <div class="w-12 h-12 rounded-xl bg-orange-600 text-white flex items-center justify-center mb-4 group-hover:scale-110 transition-transform shadow-md shadow-orange-600/30">
+                <i data-lucide="utensils" class="w-6 h-6"></i>
+              </div>
+              <h3 class="text-base font-bold text-slate-900 group-hover:text-orange-600 transition-colors">Direktori Kuliner & Wisata</h3>
+              <p class="text-xs text-slate-600 mt-1.5 leading-relaxed">Koleksi 16+ kuliner pusaka legendaris dan destinasi budaya Solo Raya dengan foto autentik.</p>
+              <span class="inline-flex items-center gap-1 text-xs font-bold text-orange-700 mt-4 group-hover:translate-x-1 transition-transform">
+                Lihat Katalog <i data-lucide="arrow-right" class="w-3.5 h-3.5"></i>
+              </span>
+            </div>
+
+            <!-- Card 3 -->
+            <div data-page-target="buddy" class="cursor-pointer group p-6 rounded-2xl bg-gradient-to-br from-emerald-50 to-teal-50 border border-emerald-200/80 hover:shadow-xl hover:-translate-y-1 transition-all">
+              <div class="w-12 h-12 rounded-xl bg-emerald-600 text-white flex items-center justify-center mb-4 group-hover:scale-110 transition-transform shadow-md shadow-emerald-600/30">
+                <i data-lucide="users" class="w-6 h-6"></i>
+              </div>
+              <h3 class="text-base font-bold text-slate-900 group-hover:text-emerald-600 transition-colors">Solo-to-Social Travel Buddy</h3>
+              <p class="text-xs text-slate-600 mt-1.5 leading-relaxed">Cari teman jalan baru di open trip lokal terverifikasi, patungan biaya kuliner lebih hemat.</p>
+              <span class="inline-flex items-center gap-1 text-xs font-bold text-emerald-700 mt-4 group-hover:translate-x-1 transition-transform">
+                Cari Teman Liburan <i data-lucide="arrow-right" class="w-3.5 h-3.5"></i>
+              </span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- SPOTLIGHT PREVIEWS ON HOME -->
+      <section class="py-14">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div class="flex items-center justify-between mb-8">
+            <div>
+              <span class="text-xs font-bold uppercase tracking-wider text-amber-600">Spotlight Solo Raya</span>
+              <h2 class="text-xl sm:text-2xl font-bold font-serif-jawa text-slate-900">Destinasi & Kuliner Favorit Traveler</h2>
+            </div>
+            <button data-page-target="direktori" class="text-xs font-bold text-amber-700 hover:text-amber-800 flex items-center gap-1">
+              Lihat Semua (16) <i data-lucide="chevron-right" class="w-4 h-4"></i>
+            </button>
+          </div>
+
+          <!-- 4 Curated Highlights Grid -->
+          <div id="home-spotlight-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+            <!-- Injected by app.js -->
+          </div>
+        </div>
+      </section>
+
+    </div>
+
+    <!-- ========================================== -->
+    <!-- 2. HALAMAN AUTO-PLANNER (DEDICATED VIEW) -->
+    <!-- ========================================== -->
+    <div id="view-planner" class="page-view hidden py-8 sm:py-12">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        
+        <!-- Header Page -->
+        <div class="text-center max-w-2xl mx-auto mb-10">
+          <span class="px-3 py-1 rounded-full text-xs font-bold bg-amber-100 text-amber-800 uppercase tracking-wider inline-flex items-center gap-1.5 mb-2">
+            <i data-lucide="cpu" class="w-3.5 h-3.5"></i> Smart Planner Studio
+          </span>
+          <h1 class="text-2xl sm:text-4xl font-extrabold text-slate-900 font-serif-jawa">
+            Auto-Itinerary Generator Solo Raya
+          </h1>
+          <p class="text-xs sm:text-sm text-slate-600 mt-2">
+            Pilih durasi liburan, preferensi minat, dan budget Anda. Algoritma cerdas Dolanesia akan merancang jadwal terstruktur per jam bebas macet lengkap dengan estimasi biaya dan tombol rute peta.
+          </p>
+        </div>
+
+        <!-- Planner Card Form -->
+        <div class="bg-white border border-slate-200 rounded-3xl p-6 sm:p-8 shadow-sm">
+          <form id="auto-planner-form" class="space-y-6">
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+              
+              <!-- Parameter 1: Durasi -->
+              <div>
+                <label for="plan-duration" class="block text-xs font-bold text-slate-700 mb-2 flex items-center gap-1.5">
+                  <i data-lucide="clock" class="w-4 h-4 text-amber-600"></i> Durasi Liburan
+                </label>
+                <div class="relative">
+                  <select id="plan-duration" class="w-full pl-3.5 pr-8 py-3 bg-slate-50 rounded-xl border border-slate-200 text-xs font-semibold text-slate-800 focus:ring-2 focus:ring-amber-500 focus:outline-none appearance-none cursor-pointer">
+                    <option value="1">1 Hari (Solo Express Heritage)</option>
+                    <option value="2">2 Hari (Weekend Heritage & Culture)</option>
+                    <option value="3">3 Hari (Grand Solo Raya Explorer)</option>
+                  </select>
+                  <i data-lucide="chevron-down" class="w-4 h-4 text-slate-400 absolute right-3 top-3.5 pointer-events-none"></i>
+                </div>
+              </div>
+
+              <!-- Parameter 2: Minat -->
+              <div>
+                <label for="plan-interest" class="block text-xs font-bold text-slate-700 mb-2 flex items-center gap-1.5">
+                  <i data-lucide="heart" class="w-4 h-4 text-amber-600"></i> Kategori Minat
+                </label>
+                <div class="relative">
+                  <select id="plan-interest" class="w-full pl-3.5 pr-8 py-3 bg-slate-50 rounded-xl border border-slate-200 text-xs font-semibold text-slate-800 focus:ring-2 focus:ring-amber-500 focus:outline-none appearance-none cursor-pointer">
+                    <option value="all">Campuran / All-in-One Best of Solo</option>
+                    <option value="culinary">Kuliner Otentik Legendaris</option>
+                    <option value="culture">Sejarah, Keraton & Heritage</option>
+                    <option value="shopping">Belanja, Batik Solo & Vintage</option>
+                    <option value="nature">Wisata Alam & Healing Solo Raya</option>
+                  </select>
+                  <i data-lucide="chevron-down" class="w-4 h-4 text-slate-400 absolute right-3 top-3.5 pointer-events-none"></i>
+                </div>
+              </div>
+
+              <!-- Parameter 3: Budget Tier -->
+              <div>
+                <label for="plan-budget" class="block text-xs font-bold text-slate-700 mb-2 flex items-center gap-1.5">
+                  <i data-lucide="wallet" class="w-4 h-4 text-amber-600"></i> Estimasi Budget
+                </label>
+                <div class="relative">
+                  <select id="plan-budget" class="w-full pl-3.5 pr-8 py-3 bg-slate-50 rounded-xl border border-slate-200 text-xs font-semibold text-slate-800 focus:ring-2 focus:ring-amber-500 focus:outline-none appearance-none cursor-pointer">
+                    <option value="budget">Hemat (Rp 50k - Rp 150k / hari)</option>
+                    <option value="standard" selected>Standar (Rp 150k - Rp 350k / hari)</option>
+                    <option value="comfort">Nyaman / Sultan (Rp 350k - Rp 800k+)</option>
+                  </select>
+                  <i data-lucide="chevron-down" class="w-4 h-4 text-slate-400 absolute right-3 top-3.5 pointer-events-none"></i>
+                </div>
+              </div>
+
+              <!-- Parameter 4: Moda Transportasi -->
+              <div>
+                <label for="plan-transport" class="block text-xs font-bold text-slate-700 mb-2 flex items-center gap-1.5">
+                  <i data-lucide="bike" class="w-4 h-4 text-amber-600"></i> Moda Transportasi
+                </label>
+                <div class="relative">
+                  <select id="plan-transport" class="w-full pl-3.5 pr-8 py-3 bg-slate-50 rounded-xl border border-slate-200 text-xs font-semibold text-slate-800 focus:ring-2 focus:ring-amber-500 focus:outline-none appearance-none cursor-pointer">
+                    <option value="motor" selected>Sewa Motor / Ojek Online</option>
+                    <option value="bst">Batik Solo Trans (BST / Bus Publik)</option>
+                    <option value="car">Mobil Pribadi / Rental Driver</option>
+                  </select>
+                  <i data-lucide="chevron-down" class="w-4 h-4 text-slate-400 absolute right-3 top-3.5 pointer-events-none"></i>
+                </div>
+              </div>
+
+            </div>
+
+            <!-- Submit Button -->
+            <div class="flex justify-center pt-2">
+              <button type="submit" id="btn-generate-planner" class="px-8 py-3.5 rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs sm:text-sm shadow-xl shadow-amber-600/30 transition-all hover:scale-102 active:scale-98 flex items-center gap-2">
+                <i data-lucide="wand-2" class="w-4 h-4"></i>
+                <span>Buat Jadwal Sekarang</span>
+              </button>
+            </div>
+          </form>
+
+          <!-- Loading State Indicator (with Mascot Dola) -->
+          <div id="planner-loading" class="hidden text-center py-10">
+            <div class="relative inline-block">
+              <img src="assets/img/logo-corner.png" alt="Mascot Dola" class="h-16 w-auto mx-auto animate-bounce object-contain">
+              <span class="absolute -bottom-1 left-1/2 -translate-x-1/2 w-8 h-2 bg-amber-300/60 rounded-full blur-xs"></span>
+            </div>
+            <p id="planner-loading-text" class="text-xs font-bold text-slate-700 mt-4">Dola sedang meracik rute liburan Solo terbaik untukmu...</p>
+          </div>
+
+          <!-- GENERATED PLAN RESULTS AREA -->
+          <div id="planner-results" class="mt-8 pt-8 border-t border-slate-200">
+            
+            <!-- Cart Itinerary Notification Banner -->
+            <div id="cart-plan-banner" class="hidden mb-6 p-4 rounded-2xl bg-amber-50 border border-amber-200 text-amber-900 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-sm">
+              <div class="flex items-center gap-3">
+                <span class="w-9 h-9 rounded-xl bg-amber-200/80 text-amber-800 flex items-center justify-center flex-shrink-0 text-base shadow-sm">🛒</span>
+                <div>
+                  <p id="cart-plan-banner-text" class="text-xs font-bold text-amber-950">Rute dirancang khusus dari destinasi keranjang pilihan Anda</p>
+                  <p class="text-[11px] text-amber-800">Rute dan jam operasional telah dioptimasi berurutan agar efisien dan bebas bolak-balik.</p>
+                </div>
+              </div>
+              <button type="button" id="btn-reset-to-auto-plan" class="px-3.5 py-1.5 bg-white border border-amber-300 text-amber-800 hover:bg-amber-100 rounded-xl text-xs font-bold transition-all shadow-xs self-start sm:self-auto">
+                Kembali ke Rekomendasi AI
+              </button>
+            </div>
+
+            <!-- Results Header & Action Bar -->
+            <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
+              <div class="flex items-center gap-3">
+                <img src="assets/img/logo-corner.png" alt="Dola Mascot" class="h-11 w-auto object-contain flex-shrink-0">
+                <div>
+                  <span class="text-xs font-bold text-amber-600 uppercase tracking-wider flex items-center gap-1">
+                    <i data-lucide="check-circle" class="w-3.5 h-3.5"></i> Itinerary Siap Digunakan
+                  </span>
+                  <h3 class="text-lg font-bold text-slate-900 mt-0.5 font-serif-jawa">Rancangan Jadwal Perjalanan Terstruktur</h3>
+                </div>
+              </div>
+
+              <!-- Export / Share Buttons -->
+              <div class="flex items-center gap-2 w-full sm:w-auto">
+                <button id="btn-share-itinerary-wa" class="flex-1 sm:flex-initial px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold shadow-sm flex items-center justify-center gap-1.5 transition-all">
+                  <i data-lucide="share-2" class="w-3.5 h-3.5"></i> Bagikan ke WhatsApp
+                </button>
+                <button id="btn-print-itinerary" class="flex-1 sm:flex-initial px-3.5 py-2 rounded-xl border border-slate-300 hover:bg-slate-100 text-slate-700 text-xs font-semibold flex items-center justify-center gap-1.5 transition-colors">
+                  <i data-lucide="printer" class="w-3.5 h-3.5"></i> Cetak / Simpan
+                </button>
+              </div>
+            </div>
+
+            <!-- Day Selection Tabs -->
+            <div id="day-tabs-container" class="flex items-center gap-2 mb-6 overflow-x-auto pb-1">
+              <!-- Injected dynamically by JS -->
+            </div>
+
+            <!-- Hour-by-Hour Timeline Container -->
+            <div id="itinerary-timeline" class="space-y-4">
+              <!-- Timeline Cards dynamically populated by JS -->
+            </div>
+
+            <!-- Summary Stats Widget (Budget, Transport Advice, Tips) -->
+            <div id="plan-summary-stats" class="mt-8 pt-6 border-t border-slate-200">
+              <!-- Populated by JS -->
+            </div>
+
+          </div>
+
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ========================================== -->
+    <!-- 3. HALAMAN DIREKTORI KULINER & WISATA -->
+    <!-- ========================================== -->
+    <div id="view-direktori" class="page-view hidden py-8 sm:py-12">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        
+        <!-- Section Header -->
+        <div class="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-8">
+          <div>
+            <span class="px-3 py-1 rounded-full text-xs font-bold bg-amber-100 text-amber-800 uppercase tracking-wider inline-flex items-center gap-1.5 mb-2">
+              <i data-lucide="compass" class="w-3.5 h-3.5"></i> Direktori Resmi Solo Raya
+            </span>
+            <h1 class="text-2xl sm:text-4xl font-extrabold text-slate-900 font-serif-jawa">
+              Direktori Kuliner & Wisata Otentik Solo
+            </h1>
+            <p class="text-xs sm:text-sm text-slate-600 mt-1 max-w-xl">
+              Rekomendasi destinasi pilihan, warung legendaris resep turun-temurun, hingga surga belanja batik dan alam lereng Lawu di Solo Raya dengan foto autentik.
+            </p>
+          </div>
+
+          <div id="directory-count-badge" class="text-xs font-bold px-3 py-1.5 bg-amber-50 text-amber-800 border border-amber-200 rounded-xl self-start md:self-auto">
+            16 Destinasi & Kuliner
+          </div>
+        </div>
+
+        <!-- Filter & Search Controls Bar -->
+        <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm space-y-4 mb-8">
+          
+          <!-- Category Filter Pills -->
+          <div class="flex items-center gap-2 overflow-x-auto pb-1 text-xs font-semibold">
+            <button data-category="all" class="category-filter-btn px-4 py-2 rounded-xl bg-amber-600 text-white whitespace-nowrap transition-colors">
+              Semua
+            </button>
+            <button data-category="culinary" class="category-filter-btn px-4 py-2 rounded-xl bg-slate-100 text-slate-600 hover:bg-slate-200 whitespace-nowrap transition-colors flex items-center gap-1.5">
+              <i data-lucide="utensils" class="w-3.5 h-3.5"></i> Kuliner Otentik
+            </button>
+            <button data-category="culture" class="category-filter-btn px-4 py-2 rounded-xl bg-slate-100 text-slate-600 hover:bg-slate-200 whitespace-nowrap transition-colors flex items-center gap-1.5">
+              <i data-lucide="landmark" class="w-3.5 h-3.5"></i> Sejarah & Budaya
+            </button>
+            <button data-category="shopping" class="category-filter-btn px-4 py-2 rounded-xl bg-slate-100 text-slate-600 hover:bg-slate-200 whitespace-nowrap transition-colors flex items-center gap-1.5">
+              <i data-lucide="shopping-bag" class="w-3.5 h-3.5"></i> Belanja & Batik
+            </button>
+            <button data-category="nature" class="category-filter-btn px-4 py-2 rounded-xl bg-slate-100 text-slate-600 hover:bg-slate-200 whitespace-nowrap transition-colors flex items-center gap-1.5">
+              <i data-lucide="trees" class="w-3.5 h-3.5"></i> Alam & Healing
+            </button>
+          </div>
+
+          <!-- Search, Region & Sort Selection Grid -->
+          <div class="grid grid-cols-1 sm:grid-cols-12 gap-3 pt-1">
+            <!-- Search input -->
+            <div class="sm:col-span-6 relative">
+              <i data-lucide="search" class="w-4 h-4 text-slate-400 absolute left-3.5 top-3"></i>
+              <input type="text" id="directory-search-input" placeholder="Cari kuliner / destinasi (misal: Tengkleng, Dawet, Mangkunegaran, Cetho)..." class="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-200 text-xs focus:ring-2 focus:ring-amber-500 focus:outline-none">
+            </div>
+
+            <!-- Region Filter -->
+            <div class="sm:col-span-3 relative">
+              <select id="region-filter-select" class="w-full pl-3.5 pr-8 py-2.5 rounded-xl border border-slate-200 text-xs font-medium text-slate-700 bg-white focus:ring-2 focus:ring-amber-500 focus:outline-none appearance-none cursor-pointer">
+                <option value="all">Semua Wilayah Solo Raya</option>
+                <option value="Surakarta">Kota Surakarta (Solo)</option>
+                <option value="Karanganyar">Kab. Karanganyar</option>
+                <option value="Boyolali">Kab. Boyolali</option>
+                <option value="Klaten">Kab. Klaten</option>
+              </select>
+              <i data-lucide="chevron-down" class="w-4 h-4 text-slate-400 absolute right-3 top-3 pointer-events-none"></i>
+            </div>
+
+            <!-- Sorting Select -->
+            <div class="sm:col-span-3 relative">
+              <select id="directory-sort-select" class="w-full pl-3.5 pr-8 py-2.5 rounded-xl border border-slate-200 text-xs font-medium text-slate-700 bg-white focus:ring-2 focus:ring-amber-500 focus:outline-none appearance-none cursor-pointer">
+                <option value="popular">Urutkan: Terpopuler</option>
+                <option value="rating">Rating Tertinggi</option>
+                <option value="price-low">Harga: Termurah</option>
+                <option value="price-high">Harga: Tertinggi</option>
+                <option value="name">Nama: A - Z</option>
+              </select>
+              <i data-lucide="arrow-down-up" class="w-3.5 h-3.5 text-slate-400 absolute right-3 top-3 pointer-events-none"></i>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Directory Cards Grid -->
+        <div id="directory-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+          <!-- Rendered dynamically by app.js -->
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ========================================== -->
+    <!-- 4. HALAMAN TRAVEL BUDDY (OPEN TRIP) -->
+    <!-- ========================================== -->
+    <div id="view-buddy" class="page-view hidden py-8 sm:py-12">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        
+        <!-- Section Header -->
+        <div class="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-8">
+          <div>
+            <span class="px-3 py-1 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800 uppercase tracking-wider inline-flex items-center gap-1.5 mb-2">
+              <i data-lucide="users-round" class="w-3.5 h-3.5"></i> Solo-to-Social Portal
+            </span>
+            <h1 class="text-2xl sm:text-4xl font-extrabold text-slate-900 font-serif-jawa">
+              Travel Buddy Matching (Open Trip Solo Raya)
+            </h1>
+            <p class="text-xs sm:text-sm text-slate-600 mt-1 max-w-xl">
+              Solo traveler bukan berarti harus sendirian! Gabung ke jadwal open trip terkurasi yang dipandu oleh Host Lokal Wong Solo terverifikasi, patungan biaya lebih hemat, dan nikmati serunya petualangan bareng teman baru.
+            </p>
+          </div>
+
+          <button id="btn-create-trip-modal" class="px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold shadow-md shadow-emerald-600/30 flex items-center gap-2 transition-all self-start md:self-auto">
+            <i data-lucide="plus-circle" class="w-4 h-4"></i>
+            <span>Buat Ajakan Trip Sendiri</span>
+          </button>
+        </div>
+
+        <!-- Social Feature Benefits Banner -->
+        <div class="mb-8 grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <div class="p-4 rounded-2xl bg-white border border-slate-100 shadow-sm flex items-start gap-3">
+            <div class="w-9 h-9 rounded-xl bg-emerald-100 text-emerald-700 flex items-center justify-center flex-shrink-0">
+              <i data-lucide="shield-check" class="w-5 h-5"></i>
+            </div>
+            <div>
+              <h4 class="text-xs font-bold text-slate-800">Aman & Terverifikasi</h4>
+              <p class="text-[11px] text-slate-500 mt-0.5">Semua host dan titik kumpul di area publik yang aman dan diawasi.</p>
+            </div>
+          </div>
+
+          <div class="p-4 rounded-2xl bg-white border border-slate-100 shadow-sm flex items-start gap-3">
+            <div class="w-9 h-9 rounded-xl bg-amber-100 text-amber-700 flex items-center justify-center flex-shrink-0">
+              <i data-lucide="coins" class="w-5 h-5"></i>
+            </div>
+            <div>
+              <h4 class="text-xs font-bold text-slate-800">Patungan Biaya Hemat</h4>
+              <p class="text-[11px] text-slate-500 mt-0.5">Berbagi sewa kendaraan dan porsi kuliner besar seperti tengkleng & liwet.</p>
+            </div>
+          </div>
+
+          <div class="p-4 rounded-2xl bg-white border border-slate-100 shadow-sm flex items-start gap-3">
+            <div class="w-9 h-9 rounded-xl bg-blue-100 text-blue-700 flex items-center justify-center flex-shrink-0">
+              <i data-lucide="camera" class="w-5 h-5"></i>
+            </div>
+            <div>
+              <h4 class="text-xs font-bold text-slate-800">Dokumentasi & Teman Baru</h4>
+              <p class="text-[11px] text-slate-500 mt-0.5">Ada yang bantu fotoin di spot estetik dan koneksi pertemanan se-Indonesia.</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Open Trips Grid -->
+        <div id="open-trips-grid" class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <!-- Rendered dynamically by app.js -->
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ========================================== -->
+    <!-- 5. HALAMAN TENTANG KAMI & FAQ -->
+    <!-- ========================================== -->
+    <div id="view-tentang" class="page-view hidden py-8 sm:py-12">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
+          
+          <div class="lg:col-span-6 space-y-5">
+            <span class="px-3 py-1 rounded-full text-xs font-bold bg-amber-100 text-amber-800 uppercase tracking-wider inline-flex items-center gap-1.5">
+              <i data-lucide="info" class="w-3.5 h-3.5"></i> Cerita & Filosofi Kami
+            </span>
+
+            <h1 class="text-2xl sm:text-4xl font-extrabold text-slate-900 font-serif-jawa leading-tight">
+              Misi Menjadikan Solo Raya Destinasi Teramah bagi Solo Traveler
+            </h1>
+
+            <p class="text-xs sm:text-sm text-slate-600 leading-relaxed">
+              Solo Raya dikenal dengan keramahan warganya (*Grapyak Semanak*), kekayaan kuliner warisan Mataram Islam, dan keindahan arsitektur yang memesona. Namun, seringkali solo traveler merasa canggung saat mencicipi makanan berkuah porsi besar sendirian atau bingung merangkai rute harian.
+            </p>
+
+            <p class="text-xs sm:text-sm text-slate-600 leading-relaxed">
+              <strong>DOLANESIA</strong> hadir sebagai inovasi platform pintar yang menyatukan teknologi perencanaan rute otomatis, kurasi rasa autentik wong Solo, dan platform sosial komunitas travel buddy yang hangat.
+            </p>
+
+            <div class="grid grid-cols-2 gap-4 pt-2">
+              <div class="p-4 rounded-2xl bg-white border border-slate-200">
+                <span class="text-amber-600 font-bold text-sm block">100% Autentik</span>
+                <p class="text-xs text-slate-500 mt-0.5">Kurasi langsung dari warga lokal Wong Solo asli.</p>
+              </div>
+              <div class="p-4 rounded-2xl bg-white border border-slate-200">
+                <span class="text-emerald-600 font-bold text-sm block">Koneksi Komunitas</span>
+                <p class="text-xs text-slate-500 mt-0.5">Terhubung ke WhatsApp Group traveler aktif.</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="lg:col-span-6">
+            <!-- Accordion FAQ -->
+            <div class="space-y-3 bg-white p-6 rounded-3xl border border-slate-200 shadow-sm">
+              <h3 class="text-base font-bold text-slate-900 mb-3 flex items-center gap-2">
+                <i data-lucide="help-circle" class="w-4 h-4 text-amber-600"></i> Tanya Jawab Seputar Solo Raya (FAQ)
+              </h3>
+
+              <details class="group bg-slate-50 p-4 rounded-2xl border border-slate-200/80 cursor-pointer">
+                <summary class="font-bold text-xs sm:text-sm text-slate-800 list-none flex justify-between items-center">
+                  <span>Bagaimana cara naik transportasi umum Batik Solo Trans (BST)?</span>
+                  <i data-lucide="chevron-down" class="w-4 h-4 text-slate-400 group-open:rotate-180 transition-transform"></i>
+                </summary>
+                <p class="text-xs text-slate-600 mt-2.5 leading-relaxed">
+                  Batik Solo Trans (BST) dan Feeder sangat mudah digunakan dengan kartu uang elektronik (E-Money/Flazz/Brizzi/TapCash). Unduh aplikasi Teman Bus di smartphone untuk memantau waktu kedatangan bus secara real-time di setiap halte.
+                </p>
+              </details>
+
+              <details class="group bg-slate-50 p-4 rounded-2xl border border-slate-200/80 cursor-pointer">
+                <summary class="font-bold text-xs sm:text-sm text-slate-800 list-none flex justify-between items-center">
+                  <span>Kapan waktu terbaik berkunjung ke Pasar Gede dan Mangkunegaran?</span>
+                  <i data-lucide="chevron-down" class="w-4 h-4 text-slate-400 group-open:rotate-180 transition-transform"></i>
+                </summary>
+                <p class="text-xs text-slate-600 mt-2.5 leading-relaxed">
+                  Pasar Gede paling pas dikunjungi pukul 07.00 - 09.00 WIB untuk sarapan es dawet telasih segar dan lenjongan. Sementara Pura Mangkunegaran buka mulai 08.30 WIB dan waktu terbaik adalah pagi hari sebelum matahari terlalu terik.
+                </p>
+              </details>
+
+              <details class="group bg-slate-50 p-4 rounded-2xl border border-slate-200/80 cursor-pointer">
+                <summary class="font-bold text-xs sm:text-sm text-slate-800 list-none flex justify-between items-center">
+                  <span>Bagaimana jika saya ingin mengubah rencana liburan otomatis?</span>
+                  <i data-lucide="chevron-down" class="w-4 h-4 text-slate-400 group-open:rotate-180 transition-transform"></i>
+                </summary>
+                <p class="text-xs text-slate-600 mt-2.5 leading-relaxed">
+                  Sangat mudah! Anda dapat mengklik tombol "Simpan / + Itinerary" pada destinasi mana pun di direktori untuk memasukkannya ke Keranjang Rencana Saya, lalu menyusunnya sesuai preferensi pribadi Anda.
+                </p>
+              </details>
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ========================================== -->
+    <!-- 6. HALAMAN PROFIL & PENGATURAN (CUSTOMER VIEW) -->
+    <!-- ========================================== -->
+    <div id="view-profil" class="page-view hidden py-8 sm:py-12">
+      <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+        
+        <!-- Header Banner Profil -->
+        <div class="bg-gradient-to-r from-amber-600 to-orange-600 rounded-3xl p-6 sm:p-8 text-white shadow-xl relative overflow-hidden mb-8">
+          <div class="relative z-10 flex flex-col sm:flex-row items-center sm:items-start gap-5 text-center sm:text-left">
+            <!-- Avatar -->
+            <div class="relative">
+              <img id="user-profile-avatar" src="https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=200&q=80" alt="Avatar User" class="w-24 h-24 rounded-full ring-4 ring-white/30 object-cover shadow-lg">
+              <span id="user-role-badge" class="absolute bottom-0 right-0 px-2 py-0.5 rounded-full text-[10px] font-bold bg-white text-amber-700 shadow-sm">
+                Solo Traveler
+              </span>
+            </div>
+
+            <!-- Basic Details -->
+            <div class="space-y-1">
+              <h2 id="user-profile-name" class="text-2xl font-bold font-serif-jawa">Rian Setyawan</h2>
+              <p id="user-profile-city" class="text-xs text-amber-100 flex items-center justify-center sm:justify-start gap-1">
+                <i data-lucide="map-pin" class="w-3.5 h-3.5 text-amber-200"></i> Asal: Jakarta Selatan
+              </p>
+              <div class="flex flex-wrap items-center justify-center sm:justify-start gap-3 text-xs text-white/90 pt-1">
+                <span class="flex items-center gap-1">
+                  <i data-lucide="phone" class="w-3.5 h-3.5 text-amber-300"></i>
+                  <span id="user-profile-phone">0812-3456-7890</span>
+                </span>
+                <span>•</span>
+                <span class="flex items-center gap-1">
+                  <i data-lucide="mail" class="w-3.5 h-3.5 text-amber-300"></i>
+                  <span id="user-profile-email">rian.traveler@gmail.com</span>
+                </span>
+              </div>
+            </div>
+
+            <!-- Quick Action Logout -->
+            <div class="sm:ml-auto pt-2 sm:pt-0">
+              <button id="btn-logout-profil" class="px-4 py-2 bg-white/20 hover:bg-white hover:text-red-600 text-white font-bold text-xs rounded-xl backdrop-blur-md transition-all flex items-center gap-1.5">
+                <i data-lucide="log-out" class="w-4 h-4"></i> Keluar
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Profile Tabs Container -->
+        <div class="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden">
+          
+          <!-- Inner Tabs Navigation -->
+          <div class="flex border-b border-slate-200 overflow-x-auto text-xs font-bold bg-slate-50/50">
+            <button data-profile-tab="edit-info" class="profile-subtab-btn px-6 py-4 border-b-2 border-amber-600 text-amber-600 whitespace-nowrap flex items-center gap-2">
+              <i data-lucide="user" class="w-4 h-4"></i> Informasi Akun
+            </button>
+            <button data-profile-tab="saved-trips" class="profile-subtab-btn px-6 py-4 border-b-2 border-transparent text-slate-600 hover:text-amber-600 whitespace-nowrap flex items-center gap-2">
+              <i data-lucide="bookmark" class="w-4 h-4"></i> Rencana Saya (<span id="profile-cart-count">0</span>)
+            </button>
+            <button data-profile-tab="joined-trips" class="profile-subtab-btn px-6 py-4 border-b-2 border-transparent text-slate-600 hover:text-amber-600 whitespace-nowrap flex items-center gap-2">
+              <i data-lucide="users" class="w-4 h-4"></i> Open Trip Saya
+            </button>
+            <button data-profile-tab="settings" class="profile-subtab-btn px-6 py-4 border-b-2 border-transparent text-slate-600 hover:text-amber-600 whitespace-nowrap flex items-center gap-2">
+              <i data-lucide="settings" class="w-4 h-4"></i> Pengaturan & Notifikasi
+            </button>
+          </div>
+
+          <!-- Tab Content 1: Edit Informasi Akun -->
+          <div id="tab-content-edit-info" class="p-6 sm:p-8 space-y-6">
+            <form id="form-update-profile" class="space-y-4 max-w-2xl">
+              <div>
+                <label class="block text-xs font-bold text-slate-700 mb-1">Nama Lengkap</label>
+                <input type="text" id="edit-user-name" required value="Rian Setyawan" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-xs focus:ring-2 focus:ring-amber-500 focus:outline-none">
+              </div>
+
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label class="block text-xs font-bold text-slate-700 mb-1">Nomor WhatsApp / Telepon</label>
+                  <input type="tel" id="edit-user-phone" required value="0812-3456-7890" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-xs focus:ring-2 focus:ring-amber-500 focus:outline-none">
+                </div>
+                <div>
+                  <label class="block text-xs font-bold text-slate-700 mb-1">Email Aktif</label>
+                  <input type="email" id="edit-user-email" required value="rian.traveler@gmail.com" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-xs focus:ring-2 focus:ring-amber-500 focus:outline-none">
+                </div>
+              </div>
+
+              <div>
+                <label class="block text-xs font-bold text-slate-700 mb-1">Kota Asal Anda</label>
+                <input type="text" id="edit-user-city" value="Jakarta Selatan" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-xs focus:ring-2 focus:ring-amber-500 focus:outline-none">
+              </div>
+
+              <div>
+                <label class="block text-xs font-bold text-slate-700 mb-1">Bio Singkat Traveler</label>
+                <textarea id="edit-user-bio" rows="3" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-xs focus:ring-2 focus:ring-amber-500 focus:outline-none" placeholder="Ceritakan gaya liburanmu (misal: Suka kulineran pedas dan berburu foto gedung tua)...">Pecinta kuliner legendaris dan penikmat suasana tenang kota Solo. Senang berteman dengan sesama solo traveler!</textarea>
+              </div>
+
+              <button type="submit" class="px-6 py-2.5 rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs shadow-md shadow-amber-600/30 flex items-center gap-2 transition-all">
+                <i data-lucide="check" class="w-4 h-4"></i> Simpan Perubahan Profil
+              </button>
+            </form>
+          </div>
+
+          <!-- Tab Content 2: Rencana Tersimpan -->
+          <div id="tab-content-saved-trips" class="p-6 sm:p-8 hidden space-y-4">
+            <div class="flex items-center justify-between pb-2 border-b border-slate-100">
+              <div>
+                <h3 class="font-bold text-slate-900 text-base">Daftar Destinasi & Kuliner Pilihan Saya</h3>
+                <p class="text-xs text-slate-500">Destinasi yang Anda simpan dari direktori maupun generator</p>
+              </div>
+              <button data-page-target="planner" class="px-3.5 py-1.5 bg-amber-600 text-white rounded-xl text-xs font-bold hover:bg-amber-700 transition-colors">
+                + Buat Rute Otomatis
+              </button>
+            </div>
+            
+            <div id="profile-saved-list" class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <!-- Injected by app.js -->
+            </div>
+          </div>
+
+          <!-- Tab Content 3: Open Trip Saya -->
+          <div id="tab-content-joined-trips" class="p-6 sm:p-8 hidden space-y-4">
+            <div class="pb-2 border-b border-slate-100">
+              <h3 class="font-bold text-slate-900 text-base">Riwayat Partisipasi Open Trip</h3>
+              <p class="text-xs text-slate-500">Daftar perjalanan bersama komunitas yang telah Anda ikuti</p>
+            </div>
+
+            <div id="profile-joined-trips-list" class="space-y-3">
+              <!-- Injected by app.js -->
+            </div>
+          </div>
+
+          <!-- Tab Content 4: Pengaturan & Keamanan -->
+          <div id="tab-content-settings" class="p-6 sm:p-8 hidden space-y-6">
+            <div class="space-y-4 max-w-xl">
+              <h4 class="text-sm font-bold text-slate-900">Preferensi Notifikasi</h4>
+              <div class="space-y-3 text-xs">
+                <label class="flex items-center gap-3 p-3 bg-slate-50 rounded-xl border border-slate-200 cursor-pointer hover:bg-slate-100/60 transition-colors">
+                  <input type="checkbox" id="setting-wa-reminders" checked class="w-4 h-4 text-amber-600 rounded focus:ring-amber-500">
+                  <span>Kirim pengingat jadwal trip lewat WhatsApp</span>
+                </label>
+                <label class="flex items-center gap-3 p-3 bg-slate-50 rounded-xl border border-slate-200 cursor-pointer hover:bg-slate-100/60 transition-colors">
+                  <input type="checkbox" id="setting-buddy-notifications" checked class="w-4 h-4 text-amber-600 rounded focus:ring-amber-500">
+                  <span>Notifikasi jika ada solo traveler bergabung ke open trip saya</span>
+                </label>
+              </div>
+
+              <h4 class="text-sm font-bold text-slate-900 pt-4">Keamanan Akun</h4>
+              <form id="form-change-password" class="p-4 bg-slate-50 rounded-2xl border border-slate-200 space-y-3">
+                <div>
+                  <label class="block text-xs font-semibold text-slate-700 mb-1">Kata Sandi Baru</label>
+                  <input type="password" id="input-new-password" required minlength="6" placeholder="Minimal 6 karakter" class="w-full px-3 py-2 bg-white rounded-xl border border-slate-200 text-xs focus:ring-2 focus:ring-amber-500 focus:outline-none">
+                </div>
+                <div>
+                  <label class="block text-xs font-semibold text-slate-700 mb-1">Konfirmasi Kata Sandi Baru</label>
+                  <input type="password" id="input-confirm-password" required minlength="6" placeholder="Ulangi kata sandi baru" class="w-full px-3 py-2 bg-white rounded-xl border border-slate-200 text-xs focus:ring-2 focus:ring-amber-500 focus:outline-none">
+                </div>
+                <button type="submit" class="px-5 py-2.5 bg-slate-800 text-white text-xs font-bold rounded-xl hover:bg-slate-900 transition-colors flex items-center gap-1.5 shadow-sm">
+                  <i data-lucide="key-round" class="w-3.5 h-3.5"></i> Perbarui Sandi
+                </button>
+              </form>
+
+              <div class="pt-4 border-t border-slate-100">
+                <button type="button" id="btn-logout-full" class="px-5 py-2.5 rounded-xl bg-red-50 text-red-600 hover:bg-red-100 font-bold text-xs flex items-center gap-2 transition-colors">
+                  <i data-lucide="log-out" class="w-4 h-4"></i> Keluar dari Semua Sesi Akun
+                </button>
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ========================================== -->
+    <!-- 7. HALAMAN DASHBOARD ADMINISTRATOR -->
+    <!-- ========================================== -->
+    <div id="view-admin" class="page-view hidden py-8 sm:py-12">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        
+        <!-- Admin Master Header -->
+        <div class="bg-gradient-to-r from-slate-900 via-slate-800 to-amber-950 text-white rounded-3xl p-6 sm:p-8 mb-6 shadow-2xl border border-amber-900/40 flex flex-col md:flex-row items-start md:items-center justify-between gap-5">
+          <div class="flex items-center gap-4">
+            <div class="w-14 h-14 rounded-2xl bg-gradient-to-tr from-amber-600 to-amber-500 flex items-center justify-center font-bold text-2xl shadow-xl border border-amber-300/30 flex-shrink-0">
+              <i data-lucide="shield-check" class="w-7 h-7 text-white"></i>
+            </div>
+            <div>
+              <div class="flex items-center gap-2.5 flex-wrap">
+                <span class="text-2xl font-bold font-serif-jawa tracking-tight">Admin Command Center</span>
+                <span class="px-2.5 py-0.5 rounded-full bg-amber-500/20 text-amber-300 font-black text-[11px] uppercase tracking-wider border border-amber-500/30">Super Administrator</span>
+              </div>
+              <p class="text-xs text-slate-300 mt-1 max-w-xl">
+                Pusat kendali operasional DOLANESIA Solo Raya: kelola katalog wisata & kuliner, verifikasi ajakan open trip, serta atur akun pengguna terdaftar.
+              </p>
+            </div>
+          </div>
+
+          <div class="flex items-center gap-2.5 flex-wrap">
+            <button data-page-target="beranda" class="px-4 py-2.5 bg-white/10 hover:bg-white/20 text-white text-xs font-bold rounded-xl transition-all flex items-center gap-1.5 shadow-sm">
+              <i data-lucide="eye" class="w-4 h-4"></i>
+              <span>Tampilan Wisatawan</span>
+            </button>
+            <button id="btn-admin-reset-catalog" class="px-3.5 py-2.5 bg-amber-800/80 hover:bg-amber-700 text-amber-100 text-xs font-bold rounded-xl transition-all flex items-center gap-1.5 border border-amber-500/40" title="Kembalikan 16 destinasi kurasi bawaan">
+              <i data-lucide="rotate-ccw" class="w-3.5 h-3.5"></i>
+              <span>Reset Katalog</span>
+            </button>
+            <button id="btn-admin-logout" class="px-4 py-2.5 bg-red-600/90 hover:bg-red-600 text-white text-xs font-bold rounded-xl transition-all flex items-center gap-1.5 shadow-sm">
+              <i data-lucide="log-out" class="w-4 h-4"></i>
+              <span>Logout</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Admin Navigation Sub-Tabs -->
+        <div class="flex items-center gap-2 overflow-x-auto pb-3 mb-6 border-b border-slate-200">
+          <button id="btn-admin-tab-overview" class="admin-tab-btn px-4 py-2.5 rounded-2xl text-xs font-bold bg-amber-600 text-white shadow-md shadow-amber-600/20 flex items-center gap-2 transition-all cursor-pointer whitespace-nowrap">
+            <i data-lucide="layout-dashboard" class="w-4 h-4"></i>
+            <span>Ringkasan & Analitik</span>
+          </button>
+          <button id="btn-admin-tab-destinations" class="admin-tab-btn px-4 py-2.5 rounded-2xl text-xs font-bold bg-white text-slate-600 hover:text-amber-600 border border-slate-200 flex items-center gap-2 transition-all cursor-pointer whitespace-nowrap">
+            <i data-lucide="map-pin" class="w-4 h-4"></i>
+            <span>Kelola Destinasi & Kuliner</span>
+            <span id="badge-tab-dest-count" class="px-2 py-0.5 rounded-full text-[10px] bg-amber-100 text-amber-800 font-black">16</span>
+          </button>
+          <button id="btn-admin-tab-trips" class="admin-tab-btn px-4 py-2.5 rounded-2xl text-xs font-bold bg-white text-slate-600 hover:text-amber-600 border border-slate-200 flex items-center gap-2 transition-all cursor-pointer whitespace-nowrap">
+            <i data-lucide="users" class="w-4 h-4"></i>
+            <span>Kelola Open Trip</span>
+            <span id="badge-tab-trips-count" class="px-2 py-0.5 rounded-full text-[10px] bg-emerald-100 text-emerald-800 font-black">4</span>
+          </button>
+          <button id="btn-admin-tab-users" class="admin-tab-btn px-4 py-2.5 rounded-2xl text-xs font-bold bg-white text-slate-600 hover:text-amber-600 border border-slate-200 flex items-center gap-2 transition-all cursor-pointer whitespace-nowrap">
+            <i data-lucide="user-check" class="w-4 h-4"></i>
+            <span>Manajemen Pengguna</span>
+            <span id="badge-tab-users-count" class="px-2 py-0.5 rounded-full text-[10px] bg-purple-100 text-purple-800 font-black">2</span>
+          </button>
+        </div>
+
+        <!-- ============================================== -->
+        <!-- SUB-TAB 1: RINGKASAN & ANALITIK (OVERVIEW)     -->
+        <!-- ============================================== -->
+        <div id="admin-panel-overview" class="admin-subpanel space-y-8">
+          
+          <!-- Metric Stat Cards -->
+          <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+            <div class="p-5 bg-white rounded-3xl border border-slate-200 shadow-sm hover:shadow-md transition-shadow">
+              <div class="flex items-center justify-between text-slate-400 mb-2">
+                <span class="text-xs font-bold uppercase tracking-wider text-slate-500">Total Destinasi</span>
+                <div class="w-8 h-8 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center">
+                  <i data-lucide="map-pin" class="w-4 h-4"></i>
+                </div>
+              </div>
+              <span id="admin-count-destinations" class="text-3xl font-black text-slate-900 block font-serif-jawa">16 Spot</span>
+              <span class="text-[11px] text-amber-600 font-semibold mt-1 block">Terkurasi di Solo Raya</span>
+            </div>
+
+            <div class="p-5 bg-white rounded-3xl border border-slate-200 shadow-sm hover:shadow-md transition-shadow">
+              <div class="flex items-center justify-between text-slate-400 mb-2">
+                <span class="text-xs font-bold uppercase tracking-wider text-slate-500">Open Trip Aktif</span>
+                <div class="w-8 h-8 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center">
+                  <i data-lucide="compass" class="w-4 h-4"></i>
+                </div>
+              </div>
+              <span id="admin-count-trips" class="text-3xl font-black text-emerald-700 block font-serif-jawa">4 Trip</span>
+              <span class="text-[11px] text-emerald-600 font-semibold mt-1 block">Ajakan Komunitas</span>
+            </div>
+
+            <div class="p-5 bg-white rounded-3xl border border-slate-200 shadow-sm hover:shadow-md transition-shadow">
+              <div class="flex items-center justify-between text-slate-400 mb-2">
+                <span class="text-xs font-bold uppercase tracking-wider text-slate-500">Wisatawan Terdaftar</span>
+                <div class="w-8 h-8 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center">
+                  <i data-lucide="users" class="w-4 h-4"></i>
+                </div>
+              </div>
+              <span id="admin-count-users" class="text-3xl font-black text-purple-700 block font-serif-jawa">1,254</span>
+              <span class="text-[11px] text-slate-400 font-semibold mt-1 block">Akun Pengguna Aktif</span>
+            </div>
+
+            <div class="p-5 bg-white rounded-3xl border border-slate-200 shadow-sm hover:shadow-md transition-shadow">
+              <div class="flex items-center justify-between text-slate-400 mb-2">
+                <span class="text-xs font-bold uppercase tracking-wider text-slate-500">Total Kunjungan</span>
+                <div class="w-8 h-8 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center">
+                  <i data-lucide="trending-up" class="w-4 h-4"></i>
+                </div>
+              </div>
+              <span class="text-3xl font-black text-slate-900 block font-serif-jawa">14,820</span>
+              <span class="text-[11px] text-emerald-600 font-bold mt-1 block">↑ +18.4% bulan ini</span>
+            </div>
+          </div>
+
+          <!-- Quick Actions Grid -->
+          <div class="bg-gradient-to-br from-amber-50/50 via-white to-amber-100/30 p-6 sm:p-7 rounded-3xl border border-amber-200/80 shadow-sm">
+            <div class="flex items-center justify-between mb-4">
+              <div>
+                <h3 class="font-bold text-slate-900 text-base font-serif-jawa">Tindakan Cepat Administrator</h3>
+                <p class="text-xs text-slate-500">Aksi langsung untuk memperbarui konten & komunitas aplikasi</p>
+              </div>
+              <span class="text-xs text-amber-700 font-bold hidden sm:inline-block">⚡ Akses Langsung</span>
+            </div>
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+              <button id="btn-admin-quick-add-dest" class="p-4 bg-white hover:bg-amber-600 hover:text-white rounded-2xl border border-amber-200 text-left transition-all group shadow-sm flex items-start gap-3 cursor-pointer">
+                <div class="w-10 h-10 rounded-xl bg-amber-100 group-hover:bg-white/20 text-amber-700 group-hover:text-white flex items-center justify-center flex-shrink-0 transition-colors">
+                  <i data-lucide="plus-circle" class="w-5 h-5"></i>
+                </div>
+                <div>
+                  <div class="font-bold text-xs text-slate-900 group-hover:text-white transition-colors">+ Tambah Destinasi</div>
+                  <div class="text-[11px] text-slate-500 group-hover:text-amber-100 transition-colors mt-0.5">Input tempat wisata / kuliner baru</div>
+                </div>
+              </button>
+
+              <button id="btn-admin-quick-add-trip" class="p-4 bg-white hover:bg-emerald-600 hover:text-white rounded-2xl border border-emerald-200 text-left transition-all group shadow-sm flex items-start gap-3 cursor-pointer">
+                <div class="w-10 h-10 rounded-xl bg-emerald-100 group-hover:bg-white/20 text-emerald-700 group-hover:text-white flex items-center justify-center flex-shrink-0 transition-colors">
+                  <i data-lucide="calendar-plus" class="w-5 h-5"></i>
+                </div>
+                <div>
+                  <div class="font-bold text-xs text-slate-900 group-hover:text-white transition-colors">+ Buat Open Trip</div>
+                  <div class="text-[11px] text-slate-500 group-hover:text-emerald-100 transition-colors mt-0.5">Buka ajakan jalan resmi komunitas</div>
+                </div>
+              </button>
+
+              <button id="btn-admin-quick-manage-dest" class="p-4 bg-white hover:bg-purple-600 hover:text-white rounded-2xl border border-purple-200 text-left transition-all group shadow-sm flex items-start gap-3 cursor-pointer">
+                <div class="w-10 h-10 rounded-xl bg-purple-100 group-hover:bg-white/20 text-purple-700 group-hover:text-white flex items-center justify-center flex-shrink-0 transition-colors">
+                  <i data-lucide="table" class="w-5 h-5"></i>
+                </div>
+                <div>
+                  <div class="font-bold text-xs text-slate-900 group-hover:text-white transition-colors">Katalog Lengkap</div>
+                  <div class="text-[11px] text-slate-500 group-hover:text-purple-100 transition-colors mt-0.5">Edit & hapus destinasi direktori</div>
+                </div>
+              </button>
+
+              <button data-page-target="direktori" class="p-4 bg-white hover:bg-blue-600 hover:text-white rounded-2xl border border-blue-200 text-left transition-all group shadow-sm flex items-start gap-3 cursor-pointer">
+                <div class="w-10 h-10 rounded-xl bg-blue-100 group-hover:bg-white/20 text-blue-700 group-hover:text-white flex items-center justify-center flex-shrink-0 transition-colors">
+                  <i data-lucide="external-link" class="w-5 h-5"></i>
+                </div>
+                <div>
+                  <div class="font-bold text-xs text-slate-900 group-hover:text-white transition-colors">Lihat Direktori</div>
+                  <div class="text-[11px] text-slate-500 group-hover:text-blue-100 transition-colors mt-0.5">Pratinjau tampilan wisatawan</div>
+                </div>
+              </button>
+            </div>
+          </div>
+
+          <!-- Distribution Breakdown & Activity Stream -->
+          <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+            <!-- Left Col: Category & Region Distribution -->
+            <div class="lg:col-span-7 bg-white p-6 sm:p-7 rounded-3xl border border-slate-200 shadow-sm space-y-6">
+              <div>
+                <h3 class="font-bold text-slate-900 text-base font-serif-jawa">Distribusi Kategori Destinasi</h3>
+                <p class="text-xs text-slate-500">Komposisi tempat wisata dan kuliner aktif di Solo Raya</p>
+              </div>
+
+              <div id="admin-category-distribution" class="space-y-4">
+                <!-- Injected dynamically by app.js -->
+              </div>
+
+              <div class="pt-4 border-t border-slate-100">
+                <h4 class="text-xs font-bold text-slate-700 uppercase tracking-wider mb-2.5">Sebaran Wilayah Solo Raya</h4>
+                <div id="admin-region-distribution" class="flex flex-wrap gap-2">
+                  <!-- Injected dynamically by app.js -->
+                </div>
+              </div>
+            </div>
+
+            <!-- Right Col: System Status & Activity Audit -->
+            <div class="lg:col-span-5 bg-white p-6 sm:p-7 rounded-3xl border border-slate-200 shadow-sm space-y-5">
+              <div class="flex items-center justify-between">
+                <div>
+                  <h3 class="font-bold text-slate-900 text-base font-serif-jawa">Log Aktivitas Sistem</h3>
+                  <p class="text-xs text-slate-500">Catatan sinkronisasi data & status server</p>
+                </div>
+                <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-700 text-[10px] font-bold border border-emerald-200">
+                  <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span> Sistem Aktif
+                </span>
+              </div>
+
+              <div id="admin-activity-logs" class="space-y-3 text-xs">
+                <!-- Activity timeline cards injected dynamically -->
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- ============================================== -->
+        <!-- SUB-TAB 2: KELOLA DESTINASI WISATA & KULINER   -->
+        <!-- ============================================== -->
+        <div id="admin-panel-destinations" class="admin-subpanel hidden space-y-6">
+          <div class="bg-white p-6 sm:p-7 rounded-3xl border border-slate-200 shadow-sm space-y-5">
+            <!-- Header with actions -->
+            <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+              <div>
+                <h3 class="font-bold text-slate-900 text-lg font-serif-jawa">Katalog Destinasi Wisata & Kuliner Solo Raya</h3>
+                <p class="text-xs text-slate-500">Edit data tempat, ganti foto, perbarui harga & jam buka, atau hapus destinasi</p>
+              </div>
+              <div class="flex items-center gap-2">
+                <button id="btn-admin-open-add-dest" class="px-4 py-2.5 bg-amber-600 hover:bg-amber-700 text-white rounded-xl text-xs font-bold shadow-md shadow-amber-600/20 transition-all flex items-center gap-1.5 cursor-pointer">
+                  <i data-lucide="plus" class="w-4 h-4"></i>
+                  <span>Tambah Destinasi Baru</span>
+                </button>
+              </div>
+            </div>
+
+            <!-- Filter & Search Controls -->
+            <div class="grid grid-cols-1 md:grid-cols-12 gap-3 pt-2">
+              <div class="md:col-span-5 relative">
+                <i data-lucide="search" class="w-4 h-4 text-slate-400 absolute left-3.5 top-3"></i>
+                <input type="text" id="admin-dest-search" placeholder="Cari nama tempat, menu, daerah..." class="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-200 text-xs focus:ring-2 focus:ring-amber-500 focus:outline-none">
+              </div>
+              <div class="md:col-span-4">
+                <select id="admin-dest-filter-cat" class="w-full px-3 py-2.5 rounded-xl border border-slate-200 text-xs bg-white focus:ring-2 focus:ring-amber-500">
+                  <option value="all">Semua Kategori</option>
+                  <option value="culinary">Kuliner Otentik</option>
+                  <option value="culture">Sejarah & Budaya</option>
+                  <option value="nature">Alam & Rekreasi</option>
+                  <option value="shopping">Belanja & Modern</option>
+                </select>
+              </div>
+              <div class="md:col-span-3">
+                <select id="admin-dest-filter-region" class="w-full px-3 py-2.5 rounded-xl border border-slate-200 text-xs bg-white focus:ring-2 focus:ring-amber-500">
+                  <option value="all">Semua Wilayah</option>
+                  <option value="Surakarta">Kota Surakarta</option>
+                  <option value="Karanganyar">Karanganyar</option>
+                  <option value="Boyolali">Boyolali</option>
+                  <option value="Sukoharjo">Sukoharjo</option>
+                  <option value="Klaten">Klaten</option>
+                </select>
+              </div>
+            </div>
+
+            <!-- Table of ALL destinations -->
+            <div class="overflow-x-auto rounded-2xl border border-slate-200 no-scrollbar">
+              <table class="w-full text-left text-xs min-w-[660px]">
+                <thead class="bg-slate-50 text-slate-500 uppercase text-[10px] font-bold">
+                  <tr class="border-b border-slate-200">
+                    <th class="py-3.5 px-4">Destinasi / Kuliner</th>
+                    <th class="py-3.5 px-3">Kategori</th>
+                    <th class="py-3.5 px-3">Wilayah</th>
+                    <th class="py-3.5 px-3">Biaya & Jam Buka</th>
+                    <th class="py-3.5 px-3">Menu / Highlight</th>
+                    <th class="py-3.5 px-4 text-right">Aksi</th>
+                  </tr>
+                </thead>
+                <tbody id="admin-all-destinations-table" class="divide-y divide-slate-100">
+                  <!-- Rendered dynamically by app.js -->
+                </tbody>
+              </table>
+            </div>
+
+            <div id="admin-dest-empty-state" class="hidden py-10 text-center text-slate-400">
+              <i data-lucide="search-x" class="w-8 h-8 mx-auto mb-2 opacity-50"></i>
+              <p class="text-xs">Tidak ada destinasi yang cocok dengan pencarian Anda.</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- ============================================== -->
+        <!-- SUB-TAB 3: KELOLA OPEN TRIP                    -->
+        <!-- ============================================== -->
+        <div id="admin-panel-trips" class="admin-subpanel hidden space-y-6">
+          <div class="bg-white p-6 sm:p-7 rounded-3xl border border-slate-200 shadow-sm space-y-5">
+            <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+              <div>
+                <h3 class="font-bold text-slate-900 text-lg font-serif-jawa">Manajemen Open Trip Komunitas</h3>
+                <p class="text-xs text-slate-500">Kelola kuota peserta, batalkan trip kadaluarsa, atau publikasikan trip resmi</p>
+              </div>
+              <button id="btn-admin-add-trip" class="px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold shadow-md shadow-emerald-600/20 transition-all flex items-center gap-1.5 cursor-pointer">
+                <i data-lucide="plus" class="w-4 h-4"></i>
+                <span>+ Buat Open Trip Resmi</span>
+              </button>
+            </div>
+
+            <div class="overflow-x-auto rounded-2xl border border-slate-200 no-scrollbar">
+              <table class="w-full text-left text-xs min-w-[620px]">
+                <thead class="bg-slate-50 text-slate-500 uppercase text-[10px] font-bold">
+                  <tr class="border-b border-slate-200">
+                    <th class="py-3.5 px-4">Judul & Jadwal Trip</th>
+                    <th class="py-3.5 px-3">Inisiator / Host</th>
+                    <th class="py-3.5 px-3">Kapasitas Buddy</th>
+                    <th class="py-3.5 px-3">Biaya Patungan</th>
+                    <th class="py-3.5 px-4 text-right">Aksi</th>
+                  </tr>
+                </thead>
+                <tbody id="admin-open-trips-table" class="divide-y divide-slate-100">
+                  <!-- Rendered dynamically by app.js -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- ============================================== -->
+        <!-- SUB-TAB 4: MANAJEMEN PENGGUNA                  -->
+        <!-- ============================================== -->
+        <div id="admin-panel-users" class="admin-subpanel hidden space-y-6">
+          <div class="bg-white p-6 sm:p-7 rounded-3xl border border-slate-200 shadow-sm space-y-5">
+            <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+              <div>
+                <h3 class="font-bold text-slate-900 text-lg font-serif-jawa">Manajemen Pengguna & Administrator</h3>
+                <p class="text-xs text-slate-500">Kelola akun wisatawan terdaftar dan atur hak akses peran (customer / admin)</p>
+              </div>
+            </div>
+
+            <div class="overflow-x-auto rounded-2xl border border-slate-200 no-scrollbar">
+              <table class="w-full text-left text-xs min-w-[640px]">
+                <thead class="bg-slate-50 text-slate-500 uppercase text-[10px] font-bold">
+                  <tr class="border-b border-slate-200">
+                    <th class="py-3.5 px-4">Profil Wisatawan</th>
+                    <th class="py-3.5 px-3">Kontak</th>
+                    <th class="py-3.5 px-3">Kota Asal</th>
+                    <th class="py-3.5 px-3">Preferensi</th>
+                    <th class="py-3.5 px-3">Peran (Role)</th>
+                    <th class="py-3.5 px-4 text-right">Aksi</th>
+                  </tr>
+                </thead>
+                <tbody id="admin-users-table" class="divide-y divide-slate-100">
+                  <!-- Rendered dynamically by app.js -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+  </main>
+
+  <!-- FOOTER -->
+  <footer class="bg-sogan text-white pt-14 pb-24 md:pb-14 border-t border-amber-900/40">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      
+      <div class="grid grid-cols-1 md:grid-cols-4 gap-8 pb-10 border-b border-white/10">
+        
+        <!-- Col 1: Brand Info -->
+        <div class="md:col-span-2 space-y-4">
+          <div class="flex items-center gap-3.5">
+            <a href="#beranda" data-page-target="beranda" class="flex items-center gap-3 group py-0.5">
+              <img src="assets/img/logo-corner.png" alt="DOLANESIA" class="h-13 sm:h-14 w-auto object-contain transition-transform duration-300 group-hover:scale-105 drop-shadow-md flex-shrink-0">
+              <div>
+                <span class="text-2xl font-black font-serif-jawa tracking-tight text-white block leading-tight">DOLANESIA</span>
+                <span class="text-[10px] block text-amber-400 font-extrabold uppercase tracking-wider">Teman Jalan Pintar • Solo Raya</span>
+              </div>
+            </a>
+          </div>
+          <p class="text-xs text-slate-300 max-w-sm leading-relaxed">
+            Platform perencana liburan pintar dan jejaring sosial pariwisata yang didedikasikan untuk mengangkat potensi wisata, kekayaan rasa kuliner, dan budaya luhur Surakarta serta wilayah Solo Raya.
+          </p>
+          <div class="flex items-center gap-3 pt-1">
+            <a href="https://wa.me/6282237334880" target="_blank" rel="noopener noreferrer" class="inline-block transition-transform hover:scale-110 active:scale-95" title="WhatsApp: +62 822-3733-4880">
+              <img src="assets/img/logo-wa.png" alt="WhatsApp DOLANESIA" class="w-9 h-9 object-contain drop-shadow-md">
+            </a>
+            <a href="https://www.instagram.com/dolanesia.id_?cplk=ZnFxYnZrZHEzZDlp" target="_blank" rel="noopener noreferrer" class="inline-block transition-transform hover:scale-110 active:scale-95" title="Instagram: @dolanesia.id_">
+              <img src="assets/img/logo-ig.webp" alt="Instagram DOLANESIA" class="w-9 h-9 object-contain drop-shadow-md">
+            </a>
+          </div>
+        </div>
+
+        <!-- Col 2: Navigasi Halaman -->
+        <div>
+          <h4 class="text-xs font-bold uppercase tracking-wider text-amber-400 mb-3 font-serif-jawa">Halaman Aplikasi</h4>
+          <ul class="space-y-2 text-xs text-slate-300">
+            <li><button data-page-target="beranda" class="hover:text-amber-400 transition-colors">Beranda</button></li>
+            <li><button data-page-target="planner" class="hover:text-amber-400 transition-colors">Auto-Itinerary Generator</button></li>
+            <li><button data-page-target="direktori" class="hover:text-amber-400 transition-colors">Direktori Kuliner & Wisata</button></li>
+            <li><button data-page-target="buddy" class="hover:text-amber-400 transition-colors">Solo-to-Social Travel Buddy</button></li>
+            <li><button data-page-target="tentang" class="hover:text-amber-400 transition-colors">Tentang Kami & FAQ</button></li>
+          </ul>
+        </div>
+
+        <!-- Col 3: Cakupan Wilayah -->
+        <div>
+          <h4 class="text-xs font-bold uppercase tracking-wider text-amber-400 mb-3 font-serif-jawa">Wilayah Solo Raya</h4>
+          <ul class="space-y-1.5 text-xs text-slate-300">
+            <li>• Kota Surakarta (Solo City)</li>
+            <li>• Kabupaten Karanganyar (Lawu)</li>
+            <li>• Kabupaten Boyolali (Selo)</li>
+            <li>• Kabupaten Sukoharjo (Jamuan)</li>
+            <li>• Kabupaten Klaten (Umbul & Candi)</li>
+            <li>• Kabupaten Wonogiri & Sragen</li>
+          </ul>
+        </div>
+
+      </div>
+
+      <!-- Copyright Notice as specifically requested -->
+      <div class="pt-6 flex flex-col sm:flex-row items-center justify-between text-xs text-slate-400 gap-3">
+        <p class="font-medium text-center sm:text-left">
+          © 2026 DOLANESIA - BizVibe Quintet. All Rights Reserved.
+        </p>
+        <p class="text-[11px] text-amber-400/80">
+          Dirancang dengan bangga untuk memajukan pariwisata Solo Raya.
+        </p>
+      </div>
+
+    </div>
+  </footer>
+
+  <!-- MOBILE BOTTOM NAVIGATION BAR (PWA APP FEEL) -->
+  <nav id="bottom-nav" class="fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-lg border-t border-slate-200/90 py-2 px-3 flex items-center justify-around lg:hidden shadow-lg pb-safe">
+    <button data-page-target="beranda" class="bottom-nav-item bottom-nav-active flex flex-col items-center text-slate-600 hover:text-amber-600">
+      <i data-lucide="home" class="w-5 h-5"></i>
+      <span class="text-[10px] font-semibold mt-0.5">Beranda</span>
+    </button>
+    <button data-page-target="planner" class="bottom-nav-item flex flex-col items-center text-slate-600 hover:text-amber-600">
+      <i data-lucide="sparkles" class="w-5 h-5"></i>
+      <span class="text-[10px] font-semibold mt-0.5">Planner</span>
+    </button>
+    <button data-page-target="direktori" class="bottom-nav-item flex flex-col items-center text-slate-600 hover:text-amber-600">
+      <i data-lucide="compass" class="w-5 h-5"></i>
+      <span class="text-[10px] font-semibold mt-0.5">Direktori</span>
+    </button>
+    <button data-page-target="buddy" class="bottom-nav-item flex flex-col items-center text-slate-600 hover:text-amber-600">
+      <i data-lucide="users" class="w-5 h-5"></i>
+      <span class="text-[10px] font-semibold mt-0.5">Buddy</span>
+    </button>
+    <button data-page-target="profil" class="bottom-nav-item flex flex-col items-center text-slate-600 hover:text-amber-600">
+      <i data-lucide="user" class="w-5 h-5"></i>
+      <span class="text-[10px] font-semibold mt-0.5">Akun</span>
+    </button>
+  </nav>
+
+  <!-- CUSTOM ITINERARY SLIDE-OVER DRAWER (KERANJANG LIBURAN) -->
+  <div id="cart-drawer" class="fixed inset-y-0 right-0 z-50 w-full sm:w-96 bg-white shadow-2xl transform translate-x-full transition-transform duration-300 ease-in-out flex flex-col justify-between border-l border-slate-200">
+    <!-- Header -->
+    <div class="p-5 border-b border-slate-100 flex items-center justify-between bg-slate-50/70">
+      <div class="flex items-center gap-2.5">
+        <img src="assets/img/logo-corner.png" alt="DOLANESIA" class="h-8 w-auto object-contain flex-shrink-0">
+        <h3 class="font-bold text-slate-900 font-serif-jawa text-base">Keranjang Rencana Saya</h3>
+      </div>
+      <button id="btn-close-cart" class="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-200/60">
+        <i data-lucide="x" class="w-5 h-5"></i>
+      </button>
+    </div>
+
+    <!-- Items List Container -->
+    <div id="cart-items-list" class="flex-grow p-4 overflow-y-auto space-y-3">
+      <!-- Injected by app.js -->
+    </div>
+
+    <!-- Footer Summary & Action -->
+    <div class="p-5 border-t border-slate-100 bg-slate-50 space-y-3">
+      <div class="flex justify-between items-center text-xs">
+        <span class="text-slate-500 font-medium">Perkiraan Biaya Masuk & Makan:</span>
+        <span id="cart-total-cost" class="font-bold text-sm text-amber-700">Rp 0</span>
+      </div>
+
+      <div class="grid grid-cols-2 gap-2 pt-1">
+        <button id="btn-clear-cart" class="py-2.5 px-3 rounded-xl border border-slate-200 text-xs font-semibold text-slate-600 hover:bg-slate-100 transition-colors">
+          Kosongkan
+        </button>
+        <button id="btn-generate-from-cart" class="py-2.5 px-3 rounded-xl bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold shadow-md shadow-amber-600/30 transition-all flex items-center justify-center gap-1.5">
+          <i data-lucide="sparkles" class="w-3.5 h-3.5"></i> Buat Rute
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- CART DRAWER BACKDROP OVERLAY -->
+  <div id="cart-drawer-backdrop" class="fixed inset-0 z-40 bg-black/50 backdrop-blur-xs hidden transition-opacity"></div>
+
+  <!-- ========================================== -->
+  <!-- MODAL: LOGIN & REGISTER (CUSTOMER & ADMIN) -->
+  <!-- ========================================== -->
+  <div id="login-modal" class="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm hidden items-center justify-center p-4 overflow-y-auto">
+    <div class="relative w-full max-w-md bg-white rounded-3xl shadow-2xl overflow-hidden my-8 p-6 sm:p-7">
+      
+      <button id="btn-close-login-modal" class="absolute top-4 right-4 z-20 w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-600 flex items-center justify-center transition-colors">
+        <i data-lucide="x" class="w-4 h-4"></i>
+      </button>
+
+      <!-- Brand Header -->
+      <div class="text-center pb-4">
+        <img src="assets/img/logo-corner.png" alt="DOLANESIA" class="h-12 w-auto mx-auto object-contain mb-2">
+        <h3 class="text-xl font-bold font-serif-jawa text-slate-900">Masuk ke DOLANESIA</h3>
+        <p class="text-xs text-slate-500">Platform Liburan Pintar & Komunitas Solo Raya</p>
+      </div>
+
+      <!-- Auth Tabs: Masuk Akun vs Daftar Baru -->
+      <div class="grid grid-cols-2 gap-1 bg-slate-100 p-1 rounded-2xl text-xs font-bold mb-5">
+        <button id="tab-btn-login-customer" class="py-2.5 rounded-xl bg-white text-amber-700 shadow-sm transition-all">
+          Masuk Akun
+        </button>
+        <button id="tab-btn-register" class="py-2.5 rounded-xl text-slate-600 hover:text-slate-900 transition-all">
+          Daftar Baru
+        </button>
+      </div>
+
+      <!-- FORM 1: LOGIN UTAMA (WISATAWAN & ADMINISTRATOR) -->
+      <form id="form-login-customer" class="space-y-3.5">
+        <div>
+          <label class="block text-xs font-bold text-slate-700 mb-1">Nomor WhatsApp / Email</label>
+          <input type="text" id="login-cust-id" required placeholder="0812xxxxxxxx atau nama@email.com" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs focus:ring-2 focus:ring-amber-500 focus:outline-none">
+        </div>
+        <div>
+          <label class="block text-xs font-bold text-slate-700 mb-1">Kata Sandi</label>
+          <input type="password" id="login-cust-pass" required placeholder="••••••••" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs focus:ring-2 focus:ring-amber-500 focus:outline-none">
+        </div>
+
+        <button type="submit" class="w-full py-3 bg-amber-600 hover:bg-amber-700 text-white rounded-xl font-bold text-xs shadow-md shadow-amber-600/30 flex items-center justify-center gap-2 transition-all mt-2">
+          <i data-lucide="log-in" class="w-4 h-4"></i> Masuk Sekarang
+        </button>
+      </form>
+
+      <!-- FORM 2: REGISTER CUSTOMER (HIDDEN BY DEFAULT) -->
+      <form id="form-register-customer" class="space-y-3 hidden">
+        <div>
+          <label class="block text-xs font-bold text-slate-700 mb-1">Nama Lengkap</label>
+          <input type="text" id="reg-cust-name" required placeholder="Contoh: Nadia Safira" class="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs focus:ring-2 focus:ring-amber-500 focus:outline-none">
+        </div>
+        <div class="grid grid-cols-2 gap-2">
+          <div>
+            <label class="block text-xs font-bold text-slate-700 mb-1">No. WhatsApp</label>
+            <input type="tel" id="reg-cust-phone" required placeholder="08xxxxxxxx" class="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs focus:ring-2 focus:ring-amber-500 focus:outline-none">
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-slate-700 mb-1">Kota Asal</label>
+            <input type="text" id="reg-cust-city" placeholder="Bandung / Surabaya" class="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs focus:ring-2 focus:ring-amber-500 focus:outline-none">
+          </div>
+        </div>
+        <div>
+          <label class="block text-xs font-bold text-slate-700 mb-1">Email</label>
+          <input type="email" id="reg-cust-email" required placeholder="nama@gmail.com" class="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs focus:ring-2 focus:ring-amber-500 focus:outline-none">
+        </div>
+        <div>
+          <label class="block text-xs font-bold text-slate-700 mb-1">Kata Sandi</label>
+          <input type="password" id="reg-cust-pass" required placeholder="Minimal 6 karakter" class="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs focus:ring-2 focus:ring-amber-500 focus:outline-none">
+        </div>
+
+        <button type="submit" class="w-full py-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold text-xs shadow-md shadow-emerald-600/30 flex items-center justify-center gap-2 transition-all mt-2">
+          <i data-lucide="user-plus" class="w-4 h-4"></i> Buat Akun Baru
+        </button>
+      </form>
+
+    </div>
+  </div>
+
+  <!-- MODAL: DETAIL DESTINASI / KULINER -->
+  <div id="destination-detail-modal" class="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm hidden items-center justify-center p-4 overflow-y-auto">
+    <div class="relative w-full max-w-xl bg-white rounded-3xl shadow-2xl overflow-hidden my-8 max-h-[90vh] flex flex-col">
+      <button id="btn-close-detail-modal" class="absolute top-4 right-4 z-20 w-8 h-8 rounded-full bg-black/50 hover:bg-black/70 text-white flex items-center justify-center backdrop-blur-md transition-colors">
+        <i data-lucide="x" class="w-4 h-4"></i>
+      </button>
+      <div id="detail-modal-body" class="overflow-y-auto">
+        <!-- Rendered by app.js -->
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: GABUNG OPEN TRIP TRAVEL BUDDY -->
+  <div id="join-trip-modal" class="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm hidden items-center justify-center p-4 overflow-y-auto">
+    <div class="relative w-full max-w-md bg-white rounded-3xl shadow-2xl overflow-hidden my-4 sm:my-8 max-h-[92vh] flex flex-col">
+      <button id="btn-close-join-trip-modal" class="absolute top-4 right-4 z-20 w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-600 flex items-center justify-center transition-colors">
+        <i data-lucide="x" class="w-4 h-4"></i>
+      </button>
+      <div id="join-trip-modal-content">
+        <!-- Injected by app.js -->
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: BUAT AJAKAN TRIP SENDIRI -->
+  <div id="create-trip-modal" class="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm hidden items-center justify-center p-4 overflow-y-auto">
+    <div class="relative w-full max-w-md bg-white rounded-3xl shadow-2xl overflow-hidden my-8 p-6">
+      <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+        <div>
+          <h3 class="text-base font-bold text-slate-900 font-serif-jawa">Buat Ajakan Trip Solo-to-Social</h3>
+          <p class="text-xs text-slate-500">Ajak solo traveler lain jalan bareng di Solo Raya</p>
+        </div>
+        <button id="btn-close-create-trip-modal" class="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-600 flex items-center justify-center">
+          <i data-lucide="x" class="w-4 h-4"></i>
+        </button>
+      </div>
+
+      <form id="form-create-new-trip" class="mt-4 space-y-3.5">
+        <div>
+          <label class="block text-xs font-bold text-slate-700 mb-1">Judul / Tema Trip</label>
+          <input type="text" id="new-trip-title" required placeholder="Misal: Hunting Kuliner Malam Wedang Asle & Dongo" class="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs focus:ring-2 focus:ring-amber-500 focus:outline-none">
+        </div>
+
+        <div class="grid grid-cols-2 gap-2">
+          <div>
+            <label class="block text-xs font-bold text-slate-700 mb-1">Waktu & Jam</label>
+            <input type="text" id="new-trip-schedule" required placeholder="Sabtu Malam, 19.30 WIB" class="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs focus:ring-2 focus:ring-amber-500 focus:outline-none">
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-slate-700 mb-1">Maks Kuota Buddy</label>
+            <input type="number" id="new-trip-quota" min="2" max="15" value="5" class="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs focus:ring-2 focus:ring-amber-500 focus:outline-none">
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-xs font-bold text-slate-700 mb-1">Titik Kumpul (Meeting Point)</label>
+          <input type="text" id="new-trip-meeting" required placeholder="Depan Lobi Stasiun Solo Balapan / Halte BST Ngarsopuro" class="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs focus:ring-2 focus:ring-amber-500 focus:outline-none">
+        </div>
+
+        <div class="grid grid-cols-2 gap-2">
+          <div>
+            <label class="block text-xs font-bold text-slate-700 mb-1">Estimasi Patungan</label>
+            <input type="text" id="new-trip-cost" placeholder="Rp 30.000 / orang" class="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs focus:ring-2 focus:ring-amber-500 focus:outline-none">
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-slate-700 mb-1">Nama Inisiator (Kamu)</label>
+            <input type="text" id="new-trip-host-name" required placeholder="Nama panggilanmu" class="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs focus:ring-2 focus:ring-amber-500 focus:outline-none">
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-xs font-bold text-slate-700 mb-1">Deskripsi Singkat Ajakan</label>
+          <textarea id="new-trip-desc" rows="3" placeholder="Ceritakan tujuan jalan santaimu..." class="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs focus:ring-2 focus:ring-amber-500 focus:outline-none"></textarea>
+        </div>
+
+        <button type="submit" class="w-full py-3 bg-amber-600 hover:bg-amber-700 text-white rounded-xl font-bold text-xs shadow-md shadow-amber-600/30 flex items-center justify-center gap-2 transition-all">
+          <i data-lucide="check" class="w-4 h-4"></i>
+          <span>Publikasikan Ajakan Trip</span>
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL: TAMBAH DESTINASI KE JADWAL -->
+  <div id="add-to-day-modal" class="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm hidden items-center justify-center p-4 overflow-y-auto">
+    <div class="relative w-full max-w-lg bg-white rounded-3xl shadow-2xl overflow-hidden my-8 p-6">
+      <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+        <div>
+          <h3 class="text-base font-bold text-slate-900 font-serif-jawa">Tambah Destinasi ke Rute Hari Ini</h3>
+          <p class="text-xs text-slate-500">Pilih spot dari direktori Solo Raya untuk disisipkan ke jadwal aktif</p>
+        </div>
+        <button id="btn-close-add-day-modal" class="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-600 flex items-center justify-center">
+          <i data-lucide="x" class="w-4 h-4"></i>
+        </button>
+      </div>
+
+      <div class="mt-4 space-y-3">
+        <div class="relative">
+          <i data-lucide="search" class="w-4 h-4 text-slate-400 absolute left-3.5 top-3"></i>
+          <input type="text" id="quick-add-search" placeholder="Cari nama destinasi, kuliner, atau daerah..." class="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-200 text-xs focus:ring-2 focus:ring-amber-500 focus:outline-none">
+        </div>
+
+        <div id="quick-add-dest-list" class="max-h-80 overflow-y-auto space-y-2 pr-1">
+          <!-- Injected dynamically by app.js -->
+        </div>
+      </div>
+    </div>
+  </div>
+
+    <!-- ========================================== -->
+  <!-- MODAL: FORM TAMBAH / EDIT DESTINASI WISATA & KULINER -->
+  <!-- ========================================== -->
+  <div id="admin-dest-modal" class="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm hidden items-center justify-center p-4 overflow-y-auto">
+    <div class="relative w-full max-w-2xl bg-white rounded-3xl shadow-2xl overflow-hidden my-8 p-6 sm:p-8 max-h-[90vh] flex flex-col">
+      <!-- Header -->
+      <div class="flex items-center justify-between pb-4 border-b border-slate-100 flex-shrink-0">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-2xl bg-amber-100 text-amber-700 flex items-center justify-center font-bold">
+            <i data-lucide="map-pin" class="w-5 h-5"></i>
+          </div>
+          <div>
+            <h3 id="admin-dest-modal-title" class="text-lg font-bold text-slate-900 font-serif-jawa">Tambah Destinasi Baru</h3>
+            <p id="admin-dest-modal-desc" class="text-xs text-slate-500">Lengkapi data tempat wisata atau kuliner Solo Raya</p>
+          </div>
+        </div>
+        <button id="btn-close-admin-dest-modal" class="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-600 flex items-center justify-center transition-colors">
+          <i data-lucide="x" class="w-4 h-4"></i>
+        </button>
+      </div>
+
+      <!-- Scrollable Form Body -->
+      <form id="form-admin-dest-modal" class="mt-4 space-y-4 overflow-y-auto pr-1 flex-grow">
+        <!-- Hidden input for destination ID (empty for create, filled for edit) -->
+        <input type="hidden" id="admin-dest-input-id" value="">
+
+        <!-- Row 1: Name & Category -->
+        <div class="grid grid-cols-1 sm:grid-cols-12 gap-3">
+          <div class="sm:col-span-7">
+            <label class="block text-xs font-bold text-slate-700 mb-1">Nama Tempat / Warung <span class="text-red-500">*</span></label>
+            <input type="text" id="admin-dest-input-name" required placeholder="Misal: Sate Kambing Pak Manto" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs focus:ring-2 focus:ring-amber-500 focus:outline-none font-semibold">
+          </div>
+          <div class="sm:col-span-5">
+            <label class="block text-xs font-bold text-slate-700 mb-1">Kategori <span class="text-red-500">*</span></label>
+            <select id="admin-dest-input-cat" class="w-full px-3 py-2.5 rounded-xl border border-slate-200 text-xs bg-white focus:ring-2 focus:ring-amber-500 font-medium">
+              <option value="culinary">Kuliner Otentik</option>
+              <option value="culture">Sejarah & Budaya</option>
+              <option value="nature">Alam & Rekreasi</option>
+              <option value="shopping">Belanja & Modern</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Row 2: Region & Operating Hours -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-bold text-slate-700 mb-1">Wilayah / Daerah <span class="text-red-500">*</span></label>
+            <input type="text" id="admin-dest-input-region" required placeholder="Misal: Kota Surakarta (Laweyan) atau Karanganyar" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs focus:ring-2 focus:ring-amber-500 focus:outline-none">
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-slate-700 mb-1">Jam Operasional</label>
+            <input type="text" id="admin-dest-input-hours" placeholder="Misal: 07.30 - 20.00 WIB" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs focus:ring-2 focus:ring-amber-500 focus:outline-none">
+          </div>
+        </div>
+
+        <!-- Row 3: Price Display & Numeric Price -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-bold text-slate-700 mb-1">Rentang Biaya / Porsi</label>
+            <input type="text" id="admin-dest-input-price" placeholder="Misal: Rp 25.000 - Rp 50.000 / orang" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs focus:ring-2 focus:ring-amber-500 focus:outline-none">
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-slate-700 mb-1">Estimasi Biaya Numerik (Rp)</label>
+            <input type="number" id="admin-dest-input-price-num" min="0" step="1000" placeholder="25000" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs focus:ring-2 focus:ring-amber-500 focus:outline-none">
+            <span class="text-[10px] text-slate-400">Digunakan untuk kalkulasi anggaran di Auto-Planner</span>
+          </div>
+        </div>
+
+        <!-- Row 4: Menu / Highlight -->
+        <div>
+          <label class="block text-xs font-bold text-slate-700 mb-1">Menu Andalan / Keistimewaan Utama</label>
+          <input type="text" id="admin-dest-input-menu" placeholder="Misal: Tengkleng Rica Pedas Manis, Sate Buntel Arang" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs focus:ring-2 focus:ring-amber-500 focus:outline-none">
+        </div>
+
+        <!-- Row 5: Foto Destinasi (Upload Utama dari Perangkat + Pratinjau + Opsi Tautan/Preset) -->
+        <div class="space-y-2">
+          <div class="flex items-center justify-between">
+            <label class="block text-xs font-bold text-slate-700">Foto Destinasi <span class="text-red-500">*</span></label>
+            <span class="text-[11px] text-amber-700 font-semibold">Upload dari HP / Komputer</span>
+          </div>
+
+          <!-- Hidden inputs for file and master image value -->
+          <input type="file" id="admin-dest-file-input" accept="image/png, image/jpeg, image/jpg, image/webp" class="hidden">
+          <input type="hidden" id="admin-dest-input-image" value="assets/img/pura-mangkunegaran.jpg">
+
+          <!-- Dropzone & Preview Container -->
+          <div class="grid grid-cols-1 sm:grid-cols-12 gap-3">
+            <!-- Left: Large Live Preview -->
+            <div class="sm:col-span-5 relative group rounded-2xl overflow-hidden border-2 border-slate-200 bg-slate-100 h-44 flex items-center justify-center shadow-inner">
+              <img id="admin-dest-image-preview" src="assets/img/pura-mangkunegaran.jpg" alt="Preview Foto" class="w-full h-full object-cover">
+              
+              <div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center gap-1.5 text-white p-2">
+                <button type="button" id="btn-trigger-upload" class="px-3 py-1.5 bg-amber-600 hover:bg-amber-700 text-white rounded-xl text-xs font-bold shadow-lg transition-all flex items-center gap-1.5 cursor-pointer">
+                  <i data-lucide="upload" class="w-3.5 h-3.5"></i>
+                  <span>Ganti Foto</span>
+                </button>
+                <span class="text-[10px] text-white/80">Klik untuk upload foto baru</span>
+              </div>
+
+              <span id="badge-photo-source" class="absolute top-2 left-2 px-2 py-0.5 rounded-md text-[10px] font-bold bg-black/60 text-white backdrop-blur-xs">
+                Foto Terpasang
+              </span>
+            </div>
+
+            <!-- Right: Interactive Upload Dropzone -->
+            <div class="sm:col-span-7 flex flex-col justify-between">
+              <!-- Clickable Upload Box -->
+              <div id="admin-dest-dropzone" class="border-2 border-dashed border-amber-300 hover:border-amber-500 bg-amber-50/40 hover:bg-amber-50/80 rounded-2xl p-4 text-center cursor-pointer transition-all flex flex-col items-center justify-center flex-grow group">
+                <div class="w-12 h-12 rounded-2xl bg-amber-100 text-amber-700 flex items-center justify-center mb-2 shadow-xs group-hover:scale-105 transition-transform">
+                  <i data-lucide="image-plus" class="w-6 h-6"></i>
+                </div>
+                <div class="font-bold text-xs text-slate-800">
+                  <span class="text-amber-700 underline">Klik untuk Pilih Foto</span> atau seret gambar ke sini
+                </div>
+                <p class="text-[11px] text-slate-500 mt-1">
+                  Mendukung PNG, JPG, WEBP (Otomatis dioptimasi HD)
+                </p>
+                <div id="upload-file-status" class="mt-2.5 px-3 py-1 bg-emerald-50 text-emerald-800 border border-emerald-200 rounded-xl text-[11px] font-semibold hidden flex items-center gap-1.5">
+                  <i data-lucide="check" class="w-3.5 h-3.5 text-emerald-600"></i>
+                  <span id="upload-file-name" class="truncate max-w-[200px]">foto-terpilih.jpg</span>
+                </div>
+              </div>
+
+              <!-- Secondary Toggle: Link URL / Preset -->
+              <div class="mt-2.5 flex items-center justify-between text-xs">
+                <button type="button" id="btn-toggle-alt-photo" class="text-[11px] font-semibold text-amber-800 hover:text-amber-900 flex items-center gap-1 hover:underline cursor-pointer">
+                  <i data-lucide="link-2" class="w-3 h-3"></i>
+                  <span>Atau pilih koleksi foto Solo / masukkan link</span>
+                </button>
+                <button type="button" id="btn-reset-photo" class="text-[11px] text-slate-400 hover:text-red-600 transition-colors hidden cursor-pointer">
+                  Reset
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Collapsible URL / Presets Section (Hidden by default to keep Upload front & center) -->
+          <div id="admin-alt-photo-panel" class="hidden p-3.5 bg-slate-50 rounded-2xl border border-slate-200 space-y-2.5 mt-2">
+            <div>
+              <label class="block text-[11px] font-bold text-slate-700 mb-1">Tautan Gambar Eksternal (URL)</label>
+              <input type="text" id="admin-dest-alt-url" placeholder="https://... atau assets/img/..." class="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs focus:ring-2 focus:ring-amber-500 focus:outline-none bg-white">
+            </div>
+
+            <div>
+              <span class="text-[10px] text-slate-400 font-bold uppercase tracking-wider block mb-1">Atau Pilih Cepat Koleksi Foto Solo Raya:</span>
+              <div class="flex flex-wrap gap-1 text-[11px]">
+                <button type="button" class="preset-img-btn px-2 py-0.5 bg-white hover:bg-amber-100 text-slate-700 hover:text-amber-800 rounded-lg border border-slate-200 transition-colors cursor-pointer" data-preset-img="assets/img/masjid-sheikh-zayed.jpg">Masjid Zayed</button>
+                <button type="button" class="preset-img-btn px-2 py-0.5 bg-white hover:bg-amber-100 text-slate-700 hover:text-amber-800 rounded-lg border border-slate-200 transition-colors cursor-pointer" data-preset-img="assets/img/pura-mangkunegaran.jpg">Mangkunegaran</button>
+                <button type="button" class="preset-img-btn px-2 py-0.5 bg-white hover:bg-amber-100 text-slate-700 hover:text-amber-800 rounded-lg border border-slate-200 transition-colors cursor-pointer" data-preset-img="assets/img/pasar-gede.jpg">Pasar Gede</button>
+                <button type="button" class="preset-img-btn px-2 py-0.5 bg-white hover:bg-amber-100 text-slate-700 hover:text-amber-800 rounded-lg border border-slate-200 transition-colors cursor-pointer" data-preset-img="assets/img/selat-solo.jpg">Selat Solo</button>
+                <button type="button" class="preset-img-btn px-2 py-0.5 bg-white hover:bg-amber-100 text-slate-700 hover:text-amber-800 rounded-lg border border-slate-200 transition-colors cursor-pointer" data-preset-img="assets/img/serabi-notosuman.jpg">Serabi Solo</button>
+                <button type="button" class="preset-img-btn px-2 py-0.5 bg-white hover:bg-amber-100 text-slate-700 hover:text-amber-800 rounded-lg border border-slate-200 transition-colors cursor-pointer" data-preset-img="assets/img/tengkleng-klewer.jpg">Tengkleng</button>
+                <button type="button" class="preset-img-btn px-2 py-0.5 bg-white hover:bg-amber-100 text-slate-700 hover:text-amber-800 rounded-lg border border-slate-200 transition-colors cursor-pointer" data-preset-img="assets/img/soto-gading.jpg">Soto Gading</button>
+                <button type="button" class="preset-img-btn px-2 py-0.5 bg-white hover:bg-amber-100 text-slate-700 hover:text-amber-800 rounded-lg border border-slate-200 transition-colors cursor-pointer" data-preset-img="assets/img/nasi-liwet.jpg">Nasi Liwet</button>
+                <button type="button" class="preset-img-btn px-2 py-0.5 bg-white hover:bg-amber-100 text-slate-700 hover:text-amber-800 rounded-lg border border-slate-200 transition-colors cursor-pointer" data-preset-img="assets/img/solo-safari.jpg">Solo Safari</button>
+                <button type="button" class="preset-img-btn px-2 py-0.5 bg-white hover:bg-amber-100 text-slate-700 hover:text-amber-800 rounded-lg border border-slate-200 transition-colors cursor-pointer" data-preset-img="assets/img/candi-cetho.jpg">Candi Cetho</button>
+                <button type="button" class="preset-img-btn px-2 py-0.5 bg-white hover:bg-amber-100 text-slate-700 hover:text-amber-800 rounded-lg border border-slate-200 transition-colors cursor-pointer" data-preset-img="assets/img/de-tjolomadoe.webp">De Tjolomadoe</button>
+                <button type="button" class="preset-img-btn px-2 py-0.5 bg-white hover:bg-amber-100 text-slate-700 hover:text-amber-800 rounded-lg border border-slate-200 transition-colors cursor-pointer" data-preset-img="assets/img/pasar-triwindu.jpg">Pasar Triwindu</button>
+                <button type="button" class="preset-img-btn px-2 py-0.5 bg-white hover:bg-amber-100 text-slate-700 hover:text-amber-800 rounded-lg border border-slate-200 transition-colors cursor-pointer" data-preset-img="assets/img/kampung-batik-laweyan.jpg">Batik Laweyan</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Row 6: Description -->
+        <div>
+          <label class="block text-xs font-bold text-slate-700 mb-1">Deskripsi Lengkap Tempat</label>
+          <textarea id="admin-dest-input-desc" rows="3" placeholder="Jelaskan daya tarik, sejarah singkat, suasana, atau keistimewaan tempat ini..." class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs focus:ring-2 focus:ring-amber-500 focus:outline-none"></textarea>
+        </div>
+
+        <!-- Row 7: Local Tips & Tags -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-bold text-slate-700 mb-1">Tips Lokal untuk Wisatawan</label>
+            <textarea id="admin-dest-input-tip" rows="2" placeholder="Waktu terbaik datang, etika berpakaian, cara pesan..." class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs focus:ring-2 focus:ring-amber-500 focus:outline-none"></textarea>
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-slate-700 mb-1">Tags / Label (Pisahkan Koma)</label>
+            <input type="text" id="admin-dest-input-tags" placeholder="Halal, Legendaris, Murah, Fotogenik" class="w-full px-3.5 py-2 rounded-xl border border-slate-200 text-xs focus:ring-2 focus:ring-amber-500 focus:outline-none">
+            <label class="block text-xs font-bold text-slate-700 mt-2 mb-1">Link Google Maps</label>
+            <input type="url" id="admin-dest-input-maps" placeholder="https://maps.google.com/?q=..." class="w-full px-3.5 py-2 rounded-xl border border-slate-200 text-xs focus:ring-2 focus:ring-amber-500 focus:outline-none">
+          </div>
+        </div>
+
+        <!-- Modal Footer Actions -->
+        <div class="pt-3 border-t border-slate-100 flex items-center justify-end gap-2 flex-shrink-0">
+          <button type="button" id="btn-cancel-admin-dest-modal" class="px-4 py-2.5 rounded-xl border border-slate-200 text-xs font-semibold text-slate-600 hover:bg-slate-100 transition-colors cursor-pointer">
+            Batal
+          </button>
+          <button type="submit" id="btn-submit-admin-dest-modal" class="px-5 py-2.5 bg-amber-600 hover:bg-amber-700 text-white rounded-xl text-xs font-bold shadow-md shadow-amber-600/30 flex items-center gap-1.5 transition-all cursor-pointer">
+            <i data-lucide="check" class="w-4 h-4"></i>
+            <span id="btn-submit-admin-dest-label">Simpan Destinasi</span>
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- PWA INSTALL & DOWNLOAD APP MODAL (ALL DEVICES & PREVIEW) -->
+  <div id="pwa-install-modal" class="modal fixed inset-0 z-50 hidden bg-black/60 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-4 transition-opacity">
+    <div class="bg-white rounded-t-3xl sm:rounded-3xl max-w-lg w-full p-6 shadow-2xl relative animate-in fade-in slide-in-from-bottom duration-300 max-h-[90vh] overflow-y-auto">
+      <div class="flex items-center justify-between pb-4 border-b border-slate-100">
+        <div class="flex items-center gap-3">
+          <img src="assets/img/logo-icon.png" alt="DOLANESIA Icon" class="w-11 h-11 rounded-2xl shadow-sm object-contain flex-shrink-0">
+          <div>
+            <h3 class="font-bold text-slate-900 font-serif-jawa text-base sm:text-lg">Download Aplikasi DOLANESIA</h3>
+            <p class="text-[11px] text-amber-700 font-semibold">Web App Cerdas Wisata & Kuliner Solo Raya</p>
+          </div>
+        </div>
+        <button id="btn-close-pwa-modal" class="p-2 rounded-xl text-slate-400 hover:text-slate-600 hover:bg-slate-100 cursor-pointer">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
+
+      <div class="py-4 space-y-4 text-xs text-slate-600">
+        <!-- Direct Install Button (Visible when browser triggers native prompt) -->
+        <div id="pwa-prompt-container" class="hidden">
+          <button id="btn-pwa-direct-prompt" class="w-full py-3.5 px-4 bg-gradient-to-r from-amber-600 to-amber-700 hover:from-amber-700 hover:to-amber-800 text-white rounded-2xl font-black text-sm flex items-center justify-center gap-2 shadow-lg shadow-amber-600/30 transition-all cursor-pointer hover:scale-[1.02] active:scale-95">
+            <i data-lucide="download" class="w-5 h-5"></i>
+            <span>Pasang Sekarang ke Perangkat</span>
+          </button>
+          <p class="text-center text-[11px] text-slate-400 mt-1.5">Klik untuk memunculkan dialog resmi instalasi browser</p>
+        </div>
+
+        <div class="space-y-2.5">
+          <p class="font-bold text-slate-800 text-xs">Cara Pasang Cepat di Perangkat Anda:</p>
+
+          <!-- Android Card -->
+          <div class="p-3.5 bg-slate-50 hover:bg-amber-50/50 rounded-2xl border border-slate-200/80 transition-colors">
+            <div class="flex items-center gap-2 font-bold text-slate-800 mb-1">
+              <span class="w-6 h-6 rounded-lg bg-emerald-100 text-emerald-700 flex items-center justify-center text-xs font-black">1</span>
+              <span>HP Android (Google Chrome)</span>
+            </div>
+            <p class="text-[11px] text-slate-600 ml-8">
+              Buka menu titik tiga <span class="font-bold text-slate-800">⋮</span> di kanan atas browser ➜ pilih <strong class="text-amber-700">"Instal aplikasi"</strong> atau <strong class="text-amber-700">"Tambahkan ke Layar Utama"</strong>.
+            </p>
+          </div>
+
+          <!-- iPhone iOS Card -->
+          <div class="p-3.5 bg-slate-50 hover:bg-amber-50/50 rounded-2xl border border-slate-200/80 transition-colors">
+            <div class="flex items-center gap-2 font-bold text-slate-800 mb-1">
+              <span class="w-6 h-6 rounded-lg bg-blue-100 text-blue-700 flex items-center justify-center text-xs font-black">2</span>
+              <span>iPhone / iPad (Safari)</span>
+            </div>
+            <p class="text-[11px] text-slate-600 ml-8">
+              Ketuk ikon Bagikan <span class="px-1.5 py-0.5 bg-slate-200 rounded font-bold text-slate-700">⎋ Share</span> di bar bawah Safari ➜ gulir ke bawah ➜ pilih <strong class="text-amber-700">"➕ Tambahkan ke Layar Utama"</strong>.
+            </p>
+          </div>
+
+          <!-- Laptop / PC Card -->
+          <div class="p-3.5 bg-slate-50 hover:bg-amber-50/50 rounded-2xl border border-slate-200/80 transition-colors">
+            <div class="flex items-center gap-2 font-bold text-slate-800 mb-1">
+              <span class="w-6 h-6 rounded-lg bg-purple-100 text-purple-700 flex items-center justify-center text-xs font-black">3</span>
+              <span>Laptop / Komputer (Chrome & Edge)</span>
+            </div>
+            <p class="text-[11px] text-slate-600 ml-8">
+              Klik ikon instal <span class="font-bold text-slate-800">⊕</span> atau komputer kecil di sebelah kanan bilah alamat (URL bar) browser.
+            </p>
+          </div>
+        </div>
+
+        <!-- Interactive Preview Toggle -->
+        <div class="pt-2 border-t border-slate-100">
+          <button id="btn-toggle-app-preview" class="w-full py-2.5 px-4 bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-200/80 rounded-xl font-bold text-xs flex items-center justify-center gap-2 transition-all cursor-pointer">
+            <i data-lucide="smartphone" class="w-4 h-4 text-amber-600"></i>
+            <span id="btn-toggle-app-preview-text">Pratinjau Tampilan Setelah Download (Mobile App View)</span>
+          </button>
+          <p class="text-center text-[10px] text-slate-400 mt-1">Coba lihat perbedaan tampilan aplikasi dengan navbar di bagian bawah</p>
+        </div>
+      </div>
+
+      <div class="pt-3 border-t border-slate-100 flex justify-end">
+        <button id="btn-done-pwa-modal" class="w-full sm:w-auto px-6 py-2.5 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-xs font-bold transition-all cursor-pointer">
+          Tutup
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- PRINTABLE ITINERARY CONTAINER (PRINT/PDF EXPORT ONLY) -->
+  <div id="printable-itinerary" class="printable-area hidden print:block bg-white text-slate-900 p-8">
+    <!-- Populated dynamically by app.js right before window.print() -->
+  </div>
+
+  <!-- APPLICATION SCRIPTS -->
+  <script src="js/data.js"></script>
+  <script src="js/planner.js"></script>
+  <script src="js/app.js"></script>
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('./sw.js').catch(() => {
+          // SW registered in supporting environments
+        });
+      });
+    }
+  </script>
+</body>
+</html>

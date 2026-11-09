@@ -1,0 +1,42 @@
+# DOLANESIA - Apache Configuration for InfinityFree & Production Hosting
+
+# 1. Prevent Directory Browsing
+Options -Indexes
+
+# 2. Default Index Document
+DirectoryIndex index.html
+
+# 3. Proper MIME Types (PWA, WebP, JSON)
+<IfModule mod_mime.c>
+  AddType text/html .html
+  AddType text/css .css
+  AddType application/javascript .js
+  AddType application/json .json
+  AddType application/manifest+json .webmanifest .manifest.json
+  AddType image/webp .webp
+  AddType image/svg+xml .svg
+  AddType image/png .png
+  AddType image/jpeg .jpg .jpeg
+</IfModule>
+
+# 4. Gzip / Deflate Compression (Reduces bandwidth on InfinityFree free tier)
+<IfModule mod_deflate.c>
+  AddOutputFilterByType DEFLATE text/html text/plain text/xml text/css application/javascript application/json image/svg+xml
+</IfModule>
+
+# 5. Browser Caching
+<IfModule mod_expires.c>
+  ExpiresActive On
+  ExpiresDefault "access plus 1 month"
+  ExpiresByType text/html "access plus 0 seconds"
+  ExpiresByType application/json "access plus 0 seconds"
+  ExpiresByType application/javascript "access plus 1 month"
+  ExpiresByType text/css "access plus 1 month"
+  ExpiresByType image/jpeg "access plus 1 year"
+  ExpiresByType image/png "access plus 1 year"
+  ExpiresByType image/webp "access plus 1 year"
+  ExpiresByType image/svg+xml "access plus 1 year"
+</IfModule>
+
+# 6. UTF-8 Character Encoding
+AddDefaultCharset UTF-8
