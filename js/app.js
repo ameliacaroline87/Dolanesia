@@ -2297,10 +2297,10 @@ document.addEventListener('DOMContentLoaded', () => {
     const reviewsFormatted = totalReviews >= 1000 ? `${(totalReviews / 1000).toFixed(0)}k+` : totalReviews;
 
     const elDest = document.getElementById('hero-stat-dest-count');
-    if (elDest) elDest.textContent = `${destCount}+`;
+    if (elDest) elDest.textContent = `${destCount}`;
 
     const elTravelers = document.getElementById('hero-stat-traveler-count');
-    if (elTravelers) elTravelers.textContent = `${travelerCount}+`;
+    if (elTravelers) elTravelers.textContent = `${travelerCount}`;
 
     const elRating = document.getElementById('hero-stat-rating-value');
     if (elRating) {
@@ -2309,7 +2309,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const elReviewLabel = document.getElementById('hero-stat-review-label');
     if (elReviewLabel) {
-      elReviewLabel.textContent = `${reviewsFormatted} Ulasan Asli`;
+      elReviewLabel.textContent = 'Ulasan Pengalaman Asli';
     }
   }
 
