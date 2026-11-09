@@ -264,11 +264,25 @@ document.addEventListener('DOMContentLoaded', () => {
   };
 
   // =========================================================================
-  // 2B. BACKEND SYNC SERVICE (Multi-Device & InfinityFree PHP Backend Support)
+  // 2B. BACKEND SYNC SERVICE (Sistem Database Terpusat cPanel / InfinityFree)
+  // Mengikuti arsitektur teruji CONFindo: api.php di root & data/users_live.json
   // =========================================================================
+  function getApiPhpUrl() {
+    if (typeof window === 'undefined') return 'api.php';
+    const loc = window.location;
+    if (loc.protocol && loc.protocol.startsWith('http')) {
+      const path = loc.pathname;
+      const cleanPath = path.replace(/\/(admin|login|app|itinerary|buddy|direktori)(\/.*)?$/i, '');
+      const base = cleanPath.endsWith('/') ? cleanPath : cleanPath + '/';
+      return base + 'api.php';
+    }
+    return 'api.php';
+  }
+
   async function fetchServerUsers(showToastNotice = false) {
+    const apiUrl = getApiPhpUrl();
     try {
-      const res = await fetch('api/users.php?t=' + Date.now(), { cache: 'no-store' });
+      const res = await fetch(`${apiUrl}?action=get_users&t=${Date.now()}`, { cache: 'no-store' });
       if (!res.ok) throw new Error('HTTP ' + res.status);
       const data = await res.json();
       if (data && data.success && Array.isArray(data.users)) {
@@ -302,11 +316,24 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     localStorage.setItem('dolanesia_registered_users', JSON.stringify(state.registeredUsers));
 
+    const apiUrl = getApiPhpUrl();
+    const queryParams = new URLSearchParams({
+      action: 'create_user',
+      id: newUser.id || ('user-' + Date.now()),
+      name: newUser.name || '',
+      email: newUser.email || '',
+      phone: newUser.phone || '',
+      city: newUser.city || 'Surakarta',
+      bio: newUser.bio || '',
+      role: newUser.role || 'customer',
+      t: Date.now()
+    }).toString();
+
     try {
-      const res = await fetch('api/users.php', {
+      const res = await fetch(`${apiUrl}?${queryParams}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'register', user: newUser })
+        body: JSON.stringify(newUser)
       });
       if (res.ok) {
         const data = await res.json();
@@ -324,11 +351,12 @@ document.addEventListener('DOMContentLoaded', () => {
     try {
       const localUsers = JSON.parse(localStorage.getItem('dolanesia_registered_users')) || [];
       const nonDemo = localUsers.filter(u => u.id !== 'admin-budi' && u.id !== 'user-rian' && u.id !== 'user-nadia');
+      const apiUrl = getApiPhpUrl();
       if (nonDemo.length > 0) {
-        await fetch('api/users.php', {
+        await fetch(`${apiUrl}?action=sync_users&t=${Date.now()}`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ action: 'sync_batch', users: nonDemo })
+          body: JSON.stringify({ action: 'sync_users', users: nonDemo })
         });
       }
       await fetchServerUsers(false);
@@ -338,11 +366,12 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   async function deleteUserOnServer(userId) {
+    const apiUrl = getApiPhpUrl();
     try {
-      await fetch('api/users.php', {
+      await fetch(`${apiUrl}?action=delete_user&id=${encodeURIComponent(userId)}&t=${Date.now()}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'delete', userId: userId })
+        body: JSON.stringify({ action: 'delete_user', id: userId })
       });
     } catch (err) {
       console.warn('Delete user on server error:', err.message);
@@ -350,11 +379,12 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   async function toggleUserRoleOnServer(userId) {
+    const apiUrl = getApiPhpUrl();
     try {
-      await fetch('api/users.php', {
+      await fetch(`${apiUrl}?action=toggle_role&id=${encodeURIComponent(userId)}&t=${Date.now()}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'toggle_role', userId: userId })
+        body: JSON.stringify({ action: 'toggle_role', id: userId })
       });
     } catch (err) {
       console.warn('Toggle role on server error:', err.message);
@@ -362,8 +392,9 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   async function syncLocalTripsToServer() {
+    const apiUrl = getApiPhpUrl();
     try {
-      const res = await fetch('api/trips.php?t=' + Date.now());
+      const res = await fetch(`${apiUrl}?action=get_trips&t=${Date.now()}`, { cache: 'no-store' });
       if (res.ok) {
         const data = await res.json();
         if (data && data.success && Array.isArray(data.trips) && data.trips.length > 0) {
@@ -378,11 +409,12 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   async function createTripOnServer(trip) {
+    const apiUrl = getApiPhpUrl();
     try {
-      await fetch('api/trips.php', {
+      await fetch(`${apiUrl}?action=create_trip&t=${Date.now()}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'create', trip: trip })
+        body: JSON.stringify(trip)
       });
     } catch (e) {
       console.warn('Create trip server error:', e.message);
@@ -3956,6 +3988,13 @@ document.addEventListener('DOMContentLoaded', () => {
     fetchServerUsers(false);
     syncLocalTripsToServer();
   });
+
+  // Auto Real-Time Sync (seperti CONFindo): Otomatis sinkron data tiap 8 detik saat di tab Admin agar pendaftar baru langsung muncul
+  setInterval(() => {
+    if (state.activePage === 'admin') {
+      fetchServerUsers(false);
+    }
+  }, 8000);
 
   // Force PWA / Service Worker update check on launch
   if ('serviceWorker' in navigator) {

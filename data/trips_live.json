@@ -1,0 +1,25 @@
+[
+    {
+        "id": "trip-1",
+        "title": "Eksplorasi Keraton & Kuliner Malam Solo",
+        "description": "Jalan santai mengelilingi Baluwarti, Keraton Surakarta, dan berburu nasi liwet legendaris di Keprabon bareng sesama solo traveler.",
+        "date": "2026-11-15",
+        "time": "15:30 WIB",
+        "meeting_point": "Kori Kamandungan Keraton Surakarta",
+        "max_participants": 6,
+        "category": "budaya",
+        "host": {
+            "name": "Budi Santoso",
+            "avatar": "https:\/\/images.unsplash.com\/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=200&q=80",
+            "phone": "0812-3456-7890"
+        },
+        "joinedUsers": [
+            {
+                "id": "user-rian",
+                "name": "Rian Setyawan",
+                "joined_at": "2026-11-08T10:00:00Z"
+            }
+        ],
+        "created_at": "2026-11-08T09:00:00Z"
+    }
+]

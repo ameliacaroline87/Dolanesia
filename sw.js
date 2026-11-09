@@ -3,7 +3,7 @@
  * Offline caching support for Solo Raya Smart Itinerary Planner
  */
 
-const CACHE_NAME = 'dolanesia-v26';
+const CACHE_NAME = 'dolanesia-v27';
 const ASSETS_TO_CACHE = [
   './',
   './index.html',
@@ -64,7 +64,7 @@ self.addEventListener('fetch', (event) => {
   // Never intercept or cache dynamic API backend requests (ensures real-time sync)
   try {
     const reqUrl = new URL(event.request.url);
-    if (reqUrl.pathname.includes('/api/')) {
+    if (reqUrl.pathname.includes('api.php') || reqUrl.pathname.includes('/api/') || reqUrl.pathname.includes('/data/')) {
       return;
     }
   } catch (e) {
