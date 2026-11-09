@@ -35,11 +35,13 @@ body {
   }
 }
 
+/* Sembunyikan tombol menu hamburger (garis 3) karena semua navigasi mobile sudah ada di bilah bawah (bottom-nav) */
+#btn-mobile-menu {
+  display: none !important;
+}
+
 @media (min-width: 1024px) {
   #bottom-nav {
-    display: none !important;
-  }
-  #btn-mobile-menu {
     display: none !important;
   }
 }
