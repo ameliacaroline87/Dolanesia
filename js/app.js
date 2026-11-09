@@ -264,9 +264,16 @@ document.addEventListener('DOMContentLoaded', () => {
   };
 
   // =========================================================================
-  // 2B. BACKEND SYNC SERVICE (Sistem Database Terpusat cPanel / InfinityFree)
-  // Mengikuti arsitektur teruji CONFindo: api.php di root & data/users_live.json
+  // 2B. UNIVERSAL BACKEND SYNC SERVICE (Vercel Serverless, Supabase & PHP)
+  // Mendukung sinkronisasi multi-device di Vercel, Cloud PostgreSQL, & Apache
   // =========================================================================
+  function getSupabase() {
+    if (typeof window !== 'undefined' && window.SUPABASE_CONFIG && typeof window.SUPABASE_CONFIG.isConfigured === 'function') {
+      if (window.SUPABASE_CONFIG.isConfigured()) return window.SUPABASE_CONFIG;
+    }
+    return null;
+  }
+
   function getApiPhpUrl() {
     if (typeof window === 'undefined') return 'api.php';
     const loc = window.location;
@@ -280,29 +287,71 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   async function fetchServerUsers(showToastNotice = false) {
+    // 1. Prioritas A: Supabase Cloud Database (jika diaktifkan)
+    const sb = getSupabase();
+    if (sb) {
+      try {
+        const res = await fetch(`${sb.url}/rest/v1/users?select=*&order=created_at.desc`, {
+          headers: {
+            'apikey': sb.anonKey,
+            'Authorization': `Bearer ${sb.anonKey}`
+          }
+        });
+        if (res.ok) {
+          const sbUsers = await res.json();
+          if (Array.isArray(sbUsers) && sbUsers.length > 0) {
+            state.registeredUsers = sbUsers;
+            localStorage.setItem('dolanesia_registered_users', JSON.stringify(sbUsers));
+            renderHeroStats();
+            if (state.activePage === 'admin') renderAdminDashboard();
+            if (showToastNotice) showToast(`Data Cloud Supabase tersinkron! (${sbUsers.length} pengguna)`, 'success');
+            return sbUsers;
+          }
+        }
+      } catch (e) {
+        console.warn('Supabase fetch notice:', e);
+      }
+    }
+
+    // 2. Prioritas B: Vercel Serverless Endpoint (/api/users)
+    try {
+      const resVercel = await fetch('/api/users?t=' + Date.now(), { cache: 'no-store' });
+      if (resVercel.ok) {
+        const dataV = await resVercel.json();
+        if (dataV && dataV.success && Array.isArray(dataV.users) && dataV.users.length > 0) {
+          state.registeredUsers = dataV.users;
+          localStorage.setItem('dolanesia_registered_users', JSON.stringify(dataV.users));
+          renderHeroStats();
+          if (state.activePage === 'admin') renderAdminDashboard();
+          if (showToastNotice) showToast(`Data server Vercel tersinkronkan! (${dataV.users.length} pengguna)`, 'success');
+          return dataV.users;
+        }
+      }
+    } catch (e) {
+      // bukan di environment Vercel
+    }
+
+    // 3. Prioritas C: Hosting PHP (api.php)
     const apiUrl = getApiPhpUrl();
     try {
       const res = await fetch(`${apiUrl}?action=get_users&t=${Date.now()}`, { cache: 'no-store' });
-      if (!res.ok) throw new Error('HTTP ' + res.status);
-      const data = await res.json();
-      if (data && data.success && Array.isArray(data.users)) {
-        state.registeredUsers = data.users;
-        localStorage.setItem('dolanesia_registered_users', JSON.stringify(data.users));
-        
-        renderHeroStats();
-        if (state.activePage === 'admin') {
-          renderAdminDashboard();
+      if (res.ok) {
+        const data = await res.json();
+        if (data && data.success && Array.isArray(data.users)) {
+          state.registeredUsers = data.users;
+          localStorage.setItem('dolanesia_registered_users', JSON.stringify(data.users));
+          renderHeroStats();
+          if (state.activePage === 'admin') renderAdminDashboard();
+          if (showToastNotice) showToast(`Data server tersinkronkan! (${data.users.length} pengguna)`, 'success');
+          return data.users;
         }
-        if (showToastNotice) {
-          showToast(`Data server berhasil disinkronkan! Total ${data.users.length} pengguna terdaftar.`, 'success');
-        }
-        return data.users;
       }
     } catch (err) {
-      console.warn('Sync server users info:', err.message);
-      if (showToastNotice) {
-        showToast('Menggunakan cache data lokal (server offline atau belum terhubung).', 'info');
-      }
+      // PHP offline
+    }
+
+    if (showToastNotice) {
+      showToast('Menggunakan cache data lokal (server offline).', 'info');
     }
     return state.registeredUsers;
   }
@@ -316,6 +365,42 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     localStorage.setItem('dolanesia_registered_users', JSON.stringify(state.registeredUsers));
 
+    // A. Sync ke Supabase Cloud jika aktif
+    const sb = getSupabase();
+    if (sb) {
+      try {
+        await fetch(`${sb.url}/rest/v1/users`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'apikey': sb.anonKey,
+            'Authorization': `Bearer ${sb.anonKey}`,
+            'Prefer': 'resolution=merge-duplicates'
+          },
+          body: JSON.stringify(newUser)
+        });
+      } catch (e) {
+        console.warn('Supabase post notice:', e);
+      }
+    }
+
+    // B. Sync ke Vercel Serverless Function (/api/users)
+    try {
+      const resV = await fetch('/api/users', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'register', user: newUser })
+      });
+      if (resV.ok) {
+        const dataV = await resV.json();
+        if (dataV && dataV.success && Array.isArray(dataV.users)) {
+          state.registeredUsers = dataV.users;
+          localStorage.setItem('dolanesia_registered_users', JSON.stringify(dataV.users));
+        }
+      }
+    } catch (e) {}
+
+    // C. Sync ke API PHP jika tersedia
     const apiUrl = getApiPhpUrl();
     const queryParams = new URLSearchParams({
       action: 'create_user',
@@ -342,22 +427,32 @@ document.addEventListener('DOMContentLoaded', () => {
           localStorage.setItem('dolanesia_registered_users', JSON.stringify(data.users));
         }
       }
-    } catch (err) {
-      console.warn('Post user to server error:', err.message);
-    }
+    } catch (err) {}
   }
 
   async function syncLocalUsersToServer() {
     try {
       const localUsers = JSON.parse(localStorage.getItem('dolanesia_registered_users')) || [];
       const nonDemo = localUsers.filter(u => u.id !== 'admin-budi' && u.id !== 'user-rian' && u.id !== 'user-nadia');
-      const apiUrl = getApiPhpUrl();
       if (nonDemo.length > 0) {
-        await fetch(`${apiUrl}?action=sync_users&t=${Date.now()}`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ action: 'sync_users', users: nonDemo })
-        });
+        // Vercel Serverless Sync
+        try {
+          await fetch('/api/users', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ action: 'sync_batch', users: nonDemo })
+          });
+        } catch(e){}
+
+        // PHP Sync
+        const apiUrl = getApiPhpUrl();
+        try {
+          await fetch(`${apiUrl}?action=sync_users&t=${Date.now()}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ action: 'sync_users', users: nonDemo })
+          });
+        } catch(e){}
       }
       await fetchServerUsers(false);
     } catch (e) {
@@ -366,6 +461,27 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   async function deleteUserOnServer(userId) {
+    const sb = getSupabase();
+    if (sb) {
+      try {
+        await fetch(`${sb.url}/rest/v1/users?id=eq.${encodeURIComponent(userId)}`, {
+          method: 'DELETE',
+          headers: {
+            'apikey': sb.anonKey,
+            'Authorization': `Bearer ${sb.anonKey}`
+          }
+        });
+      } catch(e){}
+    }
+
+    try {
+      await fetch('/api/users', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'delete_user', id: userId })
+      });
+    } catch (e) {}
+
     const apiUrl = getApiPhpUrl();
     try {
       await fetch(`${apiUrl}?action=delete_user&id=${encodeURIComponent(userId)}&t=${Date.now()}`, {
@@ -373,12 +489,18 @@ document.addEventListener('DOMContentLoaded', () => {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ action: 'delete_user', id: userId })
       });
-    } catch (err) {
-      console.warn('Delete user on server error:', err.message);
-    }
+    } catch (err) {}
   }
 
   async function toggleUserRoleOnServer(userId) {
+    try {
+      await fetch('/api/users', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'toggle_role', id: userId })
+      });
+    } catch (e) {}
+
     const apiUrl = getApiPhpUrl();
     try {
       await fetch(`${apiUrl}?action=toggle_role&id=${encodeURIComponent(userId)}&t=${Date.now()}`, {
@@ -386,12 +508,23 @@ document.addEventListener('DOMContentLoaded', () => {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ action: 'toggle_role', id: userId })
       });
-    } catch (err) {
-      console.warn('Toggle role on server error:', err.message);
-    }
+    } catch (err) {}
   }
 
   async function syncLocalTripsToServer() {
+    try {
+      const resV = await fetch('/api/trips?t=' + Date.now(), { cache: 'no-store' });
+      if (resV.ok) {
+        const dataV = await resV.json();
+        if (dataV && dataV.success && Array.isArray(dataV.trips) && dataV.trips.length > 0) {
+          state.openTrips = dataV.trips;
+          localStorage.setItem('dolanesia_open_trips', JSON.stringify(dataV.trips));
+          renderOpenTrips();
+          return;
+        }
+      }
+    } catch (e) {}
+
     const apiUrl = getApiPhpUrl();
     try {
       const res = await fetch(`${apiUrl}?action=get_trips&t=${Date.now()}`, { cache: 'no-store' });
@@ -403,12 +536,18 @@ document.addEventListener('DOMContentLoaded', () => {
           renderOpenTrips();
         }
       }
-    } catch (e) {
-      console.warn('Sync trips notice:', e.message);
-    }
+    } catch (e) {}
   }
 
   async function createTripOnServer(trip) {
+    try {
+      await fetch('/api/trips', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'create_trip', trip: trip })
+      });
+    } catch (e) {}
+
     const apiUrl = getApiPhpUrl();
     try {
       await fetch(`${apiUrl}?action=create_trip&t=${Date.now()}`, {
@@ -416,9 +555,7 @@ document.addEventListener('DOMContentLoaded', () => {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(trip)
       });
-    } catch (e) {
-      console.warn('Create trip server error:', e.message);
-    }
+    } catch (e) {}
   }
 
   // =========================================================================
