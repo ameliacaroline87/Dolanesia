@@ -2651,6 +2651,17 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
+  const btnMainTravelBuddyWaGroup = document.getElementById('btn-main-travel-buddy-wa-group');
+  if (btnMainTravelBuddyWaGroup) {
+    btnMainTravelBuddyWaGroup.addEventListener('click', (e) => {
+      const link = state.communityWaGroupLink || btnMainTravelBuddyWaGroup.getAttribute('href');
+      if (!link || link.includes('sample-dolanesia') || link === '#') {
+        e.preventDefault();
+        showToast('Link grup WhatsApp resmi komunitas belum diatur oleh Admin.', 'warning');
+      }
+    });
+  }
+
   const adminEditTripWaModal = document.getElementById('admin-edit-trip-wa-modal');
   const btnCloseEditTripWaModal = document.getElementById('btn-close-edit-trip-wa-modal');
   const btnCancelEditTripWa = document.getElementById('btn-cancel-edit-trip-wa');
@@ -3275,7 +3286,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 <img src="assets/img/logo-wa.png" class="w-3.5 h-3.5 object-contain" alt="WhatsApp">
                 <span class="text-[11px] font-bold">Grup WA Terhubung</span>
               </div>
-              <a href="${trip.waGroupLink || state.communityWaGroupLink || 'https://chat.whatsapp.com/sample-dolanesia-community'}" target="_blank" rel="noopener noreferrer" class="text-[11px] font-bold text-emerald-700 hover:text-emerald-900 flex items-center gap-1 hover:underline cursor-pointer">
+              <a href="${trip.waGroupLink || state.communityWaGroupLink || '#'}" target="_blank" rel="noopener noreferrer" class="btn-trip-wa-link text-[11px] font-bold text-emerald-700 hover:text-emerald-900 flex items-center gap-1 hover:underline cursor-pointer">
                 <span>Buka Link WA</span>
                 <i data-lucide="arrow-up-right" class="w-3 h-3"></i>
               </a>
@@ -3290,6 +3301,16 @@ document.addEventListener('DOMContentLoaded', () => {
         </div>
       `;
     }).join('');
+
+    elements.openTripsGrid.querySelectorAll('.btn-trip-wa-link').forEach(linkEl => {
+      linkEl.addEventListener('click', (e) => {
+        const href = linkEl.getAttribute('href');
+        if (!href || href.includes('sample-dolanesia') || href === '#') {
+          e.preventDefault();
+          showToast('Link grup WhatsApp resmi untuk trip ini belum dimasukkan oleh Admin/Host.', 'warning');
+        }
+      });
+    });
 
     elements.openTripsGrid.querySelectorAll('.btn-join-open-trip').forEach(btn => {
       btn.addEventListener('click', () => {
@@ -3399,10 +3420,15 @@ document.addEventListener('DOMContentLoaded', () => {
         renderOpenTrips();
         renderAdminDashboard();
 
-        // Otomatis buka link grup WhatsApp di tab baru
-        try {
-          window.open(targetWaLink, '_blank');
-        } catch (err) {}
+        // Cek apakah link merupakan link contoh (dummy) atau sudah link WA asli
+        const isSampleLink = !targetWaLink || targetWaLink.includes('sample-dolanesia');
+
+        // Otomatis buka link grup WhatsApp di tab baru jika sudah link asli
+        if (!isSampleLink) {
+          try {
+            window.open(targetWaLink, '_blank');
+          } catch (err) {}
+        }
 
         // Show Success screen in modal with direct WhatsApp link
         contentBox.innerHTML = `
@@ -3415,22 +3441,40 @@ document.addEventListener('DOMContentLoaded', () => {
               Kamu resmi terdaftar di <strong>${trip.title}</strong> bersama teman-teman solo traveler lainnya.
             </p>
 
-            <div class="bg-emerald-50 p-4 rounded-2xl border border-emerald-200 text-left text-xs space-y-2">
-              <p class="font-bold text-emerald-900 flex items-center gap-1.5">
-                <i data-lucide="bell" class="w-4 h-4 text-emerald-600"></i> Panduan Bergabung Grup WhatsApp:
-              </p>
-              <ul class="list-disc list-inside space-y-1 text-emerald-800">
-                <li>Jika tab WhatsApp tidak terbuka otomatis, klik tombol hijau di bawah untuk langsung join ke grup WA.</li>
-                <li>Host <strong>${trip.host.name}</strong> akan menyapa dan membagikan detail pin lokasi kumpul di grup.</li>
-                <li>Bawa kamera atau smartphone terbaikmu untuk mengabadikan momen seru!</li>
-              </ul>
-            </div>
+            ${isSampleLink ? `
+              <div class="bg-amber-50 p-4 rounded-2xl border border-amber-200 text-left text-xs space-y-2">
+                <p class="font-bold text-amber-900 flex items-center gap-1.5">
+                  <i data-lucide="alert-circle" class="w-4 h-4 text-amber-600"></i> Link Grup WhatsApp Belum Diatur:
+                </p>
+                <p class="text-amber-800 leading-relaxed text-[11px]">
+                  Link grup WhatsApp resmi untuk trip ini belum dimasukkan oleh Admin/Host. Host akan menghubungi nomor WhatsApp kamu (<strong>${document.getElementById('join-phone')?.value.trim() || 'yang terdaftar'}</strong>) untuk koordinasi kumpul.
+                </p>
+              </div>
+            ` : `
+              <div class="bg-emerald-50 p-4 rounded-2xl border border-emerald-200 text-left text-xs space-y-2">
+                <p class="font-bold text-emerald-900 flex items-center gap-1.5">
+                  <i data-lucide="bell" class="w-4 h-4 text-emerald-600"></i> Panduan Bergabung Grup WhatsApp:
+                </p>
+                <ul class="list-disc list-inside space-y-1 text-emerald-800">
+                  <li>Jika tab WhatsApp tidak terbuka otomatis, klik tombol hijau di bawah untuk langsung join ke grup WA.</li>
+                  <li>Host <strong>${trip.host.name}</strong> akan menyapa dan membagikan detail pin lokasi kumpul di grup.</li>
+                  <li>Bawa kamera atau smartphone terbaikmu untuk mengabadikan momen seru!</li>
+                </ul>
+              </div>
+            `}
 
             <div class="pt-2 flex flex-col sm:flex-row gap-2.5">
-              <a href="${targetWaLink}" target="_blank" rel="noopener noreferrer" class="flex-1 py-3 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs flex items-center justify-center gap-2 shadow-lg shadow-emerald-600/30">
-                <img src="assets/img/logo-wa.png" class="w-4 h-4 object-contain" alt="WhatsApp">
-                <span>Buka & Gabung Grup WhatsApp</span>
-              </a>
+              ${isSampleLink ? `
+                <button type="button" onclick="showToast('Link grup WhatsApp resmi belum dimasukkan oleh Admin.', 'warning')" class="flex-1 py-3 px-4 rounded-xl bg-slate-200 text-slate-600 font-bold text-xs flex items-center justify-center gap-2 cursor-not-allowed">
+                  <img src="assets/img/logo-wa.png" class="w-4 h-4 object-contain opacity-50" alt="WhatsApp">
+                  <span>Grup WhatsApp Segera Hadir</span>
+                </button>
+              ` : `
+                <a href="${targetWaLink}" target="_blank" rel="noopener noreferrer" class="flex-1 py-3 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs flex items-center justify-center gap-2 shadow-lg shadow-emerald-600/30">
+                  <img src="assets/img/logo-wa.png" class="w-4 h-4 object-contain" alt="WhatsApp">
+                  <span>Buka & Gabung Grup WhatsApp</span>
+                </a>
+              `}
               <button id="btn-done-join" class="py-3 px-4 rounded-xl border border-slate-200 text-slate-700 font-bold text-xs hover:bg-slate-50 transition-colors">
                 Tutup
               </button>
