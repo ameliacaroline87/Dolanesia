@@ -124,8 +124,35 @@ document.addEventListener('DOMContentLoaded', () => {
     activeDayTab: 1,
     activeProfileTab: 'edit-info',
     notificationPrefs: savedNotificationPrefs,
-    communityWaGroupLink: localStorage.getItem('dolanesia_community_wa_link') || 'https://chat.whatsapp.com/sample-dolanesia-community'
+    communityWaGroupLink: localStorage.getItem('dolanesia_community_wa_link') || 'https://chat.whatsapp.com/DB2XwLChmISEhHCwgK8bwk?s=cl&p=a&iam=2'
   };
+
+  // Auto-heal / migrasi tautan WhatsApp resmi dari grup WA asli Dolanesia Solo Raya
+  const OFFICIAL_COMMUNITY_WA = 'https://chat.whatsapp.com/DB2XwLChmISEhHCwgK8bwk?s=cl&p=a&iam=2';
+  if (!state.communityWaGroupLink || state.communityWaGroupLink.includes('sample-dolanesia')) {
+    state.communityWaGroupLink = OFFICIAL_COMMUNITY_WA;
+    localStorage.setItem('dolanesia_community_wa_link', OFFICIAL_COMMUNITY_WA);
+  }
+
+  const REAL_TRIP_WA_LINKS = {
+    'trip-ngarsopuro-night': 'https://chat.whatsapp.com/DB2XwLChmISEhHCwgK8bwk?s=cl&p=a&iam=2',
+    'trip-heritage-walking': 'https://chat.whatsapp.com/JjxH7PqmY0W84gXhuhOEvw?s=cl&p=a&iam=2',
+    'trip-candi-cetho-sunrise': 'https://chat.whatsapp.com/Kd5xkNnl2F95RKILqAFGEP?s=cl&p=a&iam=2',
+    'trip-pasar-gede-kuliner': 'https://chat.whatsapp.com/LMFx2ekIi95Ci6QdbjB6E5?s=cl&p=a&iam=2'
+  };
+
+  let tripsNeedSave = false;
+  state.openTrips.forEach(trip => {
+    if (REAL_TRIP_WA_LINKS[trip.id]) {
+      if (!trip.waGroupLink || trip.waGroupLink.includes('sample-dolanesia')) {
+        trip.waGroupLink = REAL_TRIP_WA_LINKS[trip.id];
+        tripsNeedSave = true;
+      }
+    }
+  });
+  if (tripsNeedSave) {
+    localStorage.setItem('dolanesia_open_trips', JSON.stringify(state.openTrips));
+  }
 
   const planner = new DolanesiaPlanner(state.destinations);
 

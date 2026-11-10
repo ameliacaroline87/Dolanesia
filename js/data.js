@@ -337,7 +337,7 @@ const SOLO_OPEN_TRIPS = [
       { name: 'Fikri A.', city: 'Surabaya', avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=100&q=80' },
       { name: 'Sarah M.', city: 'Yogyakarta', avatar: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?auto=format&fit=crop&w=100&q=80' }
     ],
-    waGroupLink: 'https://chat.whatsapp.com/sample-dolanesia-ngarsopuro'
+    waGroupLink: 'https://chat.whatsapp.com/DB2XwLChmISEhHCwgK8bwk?s=cl&p=a&iam=2'
   },
   {
     id: 'trip-heritage-walking',
@@ -367,7 +367,7 @@ const SOLO_OPEN_TRIPS = [
       { name: 'Hadi T.', city: 'Solo', avatar: 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&w=100&q=80' },
       { name: 'Lia R.', city: 'Bogor', avatar: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=100&q=80' }
     ],
-    waGroupLink: 'https://chat.whatsapp.com/sample-dolanesia-heritage'
+    waGroupLink: 'https://chat.whatsapp.com/JjxH7PqmY0W84gXhuhOEvw?s=cl&p=a&iam=2'
   },
   {
     id: 'trip-candi-cetho-sunrise',
@@ -394,7 +394,7 @@ const SOLO_OPEN_TRIPS = [
       { name: 'Nadia S.', city: 'Bekasi', avatar: 'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&w=100&q=80' },
       { name: 'Kevin O.', city: 'Depok', avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=crop&w=100&q=80' }
     ],
-    waGroupLink: 'https://chat.whatsapp.com/sample-dolanesia-cetho'
+    waGroupLink: 'https://chat.whatsapp.com/Kd5xkNnl2F95RKILqAFGEP?s=cl&p=a&iam=2'
   },
   {
     id: 'trip-pasar-gede-kuliner',
@@ -423,7 +423,7 @@ const SOLO_OPEN_TRIPS = [
       { name: 'Genta B.', city: 'Tegal', avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=100&q=80' },
       { name: 'Siska P.', city: 'Jakarta', avatar: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&w=100&q=80' }
     ],
-    waGroupLink: 'https://chat.whatsapp.com/sample-dolanesia-pasargede'
+    waGroupLink: 'https://chat.whatsapp.com/LMFx2ekIi95Ci6QdbjB6E5?s=cl&p=a&iam=2'
   }
 ];
 
